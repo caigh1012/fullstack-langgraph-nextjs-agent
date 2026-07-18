@@ -87,13 +87,16 @@ fullstack-langgraph-nextjs-agent/
 - Never use any third-party libraries that are not in the `package.json` file.
 - Never optimize the existing code.
 
-**TypeScript/React**
+**Next.js Rules**
 
 - Use an interface to define the Props type.
 - Use `React.FC <Props>` or function declarations.
 - Use `clsx` to conditionally apply classes.
 - Use `tailwindcss` to build CSS styles.
-- Preferred choice is the shadcn + radix-ui component; if this does not meet the requirements, a custom component can be created.
+- Use the hooks from the react-use library as much as possible. Custom hooks can be created if the requirements cannot be met.
+- Use `zod` to validate data types.
+- The client-side component form should use `react-hook-form` and be accompanied by zod for type checking.
+- Preferred choice is the `shadcn + radix-ui` component; if this does not meet the requirements, a custom component can be created.
 - Never use any type within a component.
 - Never omit the key in list rendering.
 - Never use inline styles.
