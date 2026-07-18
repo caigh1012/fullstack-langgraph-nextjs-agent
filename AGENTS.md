@@ -61,6 +61,7 @@ fullstack-langgraph-nextjs-agent/
 │   │       └── button.tsx
 │   ├── constants/  # The constants directory, used to store fixed values ​​and enumerations, etc..
 │   ├── contexts/  # The contexts directory, used to store the context providers.
+│   ├── helpers/  # The helpers directory, used to store utility functions.
 │   ├── hooks/  # The hooks directory, used to store custom hooks.
 │   └── lib/  # The library directory.
 │       ├── database/  # The database directory.
@@ -86,6 +87,12 @@ fullstack-langgraph-nextjs-agent/
 - Never modify the lock file.
 - Never use any third-party libraries that are not in the `package.json` file.
 - Never optimize the existing code.
+
+**Naming Rules**
+
+- Use kebab-case to define *.tsx files names, and `CamelCase` for component names.
+- Use `camelCase` for function names.
+- The custom hooks in the src/hooks directory use **use-xxx** and `kebab-case` for the file names, while the hooks use `camelCase` for the file names.
 
 **Next.js Rules**
 
