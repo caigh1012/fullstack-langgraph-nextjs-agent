@@ -79,3 +79,7 @@ const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 export { prisma };
 ```
+
+### 8、Next.js 中使用 Prisma Client
+
+参考官网：https://www.prisma.io/docs/guides/frameworks/nextjs#introduction
