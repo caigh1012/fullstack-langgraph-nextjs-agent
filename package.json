@@ -4,13 +4,13 @@
   "description": "Implementing AI Agent Based on Next.js",
   "private": true,
   "scripts": {
+    "prepare": "husky || true",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{mjs,ts,tsx,css,html,json}\"",
-    "lint-staged": "lint-staged",
-    "prepare": "husky"
+    "lint-staged": "lint-staged"
   },
   "repository": {
     "type": "git",
@@ -36,6 +36,7 @@
     "lucide-react": "^1.25.0",
     "next": "16.2.10",
     "pg": "^8.22.0",
+    "radix-ui": "^1.6.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "shadcn": "^4.13.1",
