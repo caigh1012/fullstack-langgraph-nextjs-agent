@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import QueryProvider from '@/helper/query-provider';
 import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@/helper/theme-provider';
 import './globals.css';
 
 const geistHeading = Geist({ subsets: ['latin'], variable: '--font-heading' });
@@ -31,9 +32,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn('h-full', 'antialiased', geistSans.variable, geistMono.variable, 'font-sans', inter.variable, geistHeading.variable)}>
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
