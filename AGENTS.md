@@ -68,7 +68,9 @@ fullstack-langgraph-nextjs-agent/
 │       │   └── prisma.ts  # The Prisma Client file.
 │       └── utils.ts  # The utility files, store only shadcn/ui or third-party tools that automatically import utilities, such as shadcn/ui.
 │       ├── services/  # The services directory, used to store methods that call the database (Prisma Client, etc.).
+│       ├── pojo/  # The pojo directory, used to store business objects.
 │       ├── types/  # The TypeScript type directory, used to store definitions of TypeScript types.
+├── proxy.ts  # Next.js Proxy file.
 ├── .commitlintrc.mjs  # The commitlint configuration file.
 ├── .prettierrc.json  # The prettier configuration file.
 ├── eslint.config.mjs  # The eslint configuration file.
@@ -107,6 +109,7 @@ fullstack-langgraph-nextjs-agent/
 - Never use any type within a component.
 - Never omit the key in list rendering.
 - Never use inline styles.
+- Never handle or add accessibility attributes in JSX and DOM.
 
 **tailwindcss**
 

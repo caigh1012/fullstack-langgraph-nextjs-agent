@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   TOKEN_COOKIE_KEY,
-  TOKEN_EXPIRES_IN,
   TOKEN_EXPIRES_MS,
   TOKEN_MAX_AGE,
   USERNAME_MAX_LENGTH,
@@ -14,6 +12,7 @@ import {
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { userLogin } from '@/services/user/login.service';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { generateToken } from '@/utils/jwt-util';
 
 const loginSchema = z.object({
   username: z
@@ -56,21 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-
-    if (!jwtSecret) {
-      throw new Error('JWT_SECRET 未配置');
-    }
-
-    const token = jwt.sign(
-      {
-        sub: user.id.toString(),
-        username: user.username,
-        nickname: user.nickname,
-      },
-      jwtSecret,
-      { expiresIn: TOKEN_EXPIRES_IN },
-    );
+    const token = generateToken({ sub: user.id.toString(), username: user.username });
 
     // 请求成功
     const response = NextResponse.json<ResultVO<null>>(

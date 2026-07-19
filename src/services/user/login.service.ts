@@ -1,10 +1,9 @@
 import 'server-only';
 
 import { nanoid } from 'nanoid';
-
 import { NICKNAME_LENGTH } from '@/constants';
 import prisma from '@/lib/database/prisma';
-import { LoginDto, RegisterUserDto } from '@/pojo/dto/user/login.dto';
+import { LoginBo, RegisterUserBo } from '@/pojo/bo/user/login.bo';
 
 const USER_ID_RETRY_LIMIT = 3;
 const NICKNAME_PREFIX = 'user_';
@@ -37,11 +36,11 @@ function createNickname() {
 /**
  * 注册用户
  */
-export async function registerUser(dto: RegisterUserDto): Promise<boolean> {
+export async function registerUser(bo: RegisterUserBo): Promise<boolean> {
   try {
-    const username = dto.username.trim();
-    const email = dto.email?.trim() || null;
-    const avatarUrl = dto.avatarUrl?.trim() || null;
+    const username = bo.username.trim();
+    const email = bo.email?.trim() || null;
+    const avatarUrl = bo.avatarUrl?.trim() || null;
 
     const existingUserByUsername = await prisma.user.findUnique({
       where: {
@@ -62,8 +61,8 @@ export async function registerUser(dto: RegisterUserDto): Promise<boolean> {
         username,
         nickname: createNickname(),
         email,
-        password: dto.password,
-        gender: dto.gender ?? 'UNKNOWN',
+        password: bo.password,
+        gender: bo.gender ?? 'UNKNOWN',
         avatarUrl,
       },
       select: {
@@ -85,9 +84,9 @@ export async function registerUser(dto: RegisterUserDto): Promise<boolean> {
 /**
  * 登录用户
  */
-export async function userLogin(dto: LoginDto) {
+export async function userLogin(bo: LoginBo) {
   try {
-    const { username } = dto;
+    const { username } = bo;
     const user = await prisma.user.findUnique({
       where: { username },
       select: {

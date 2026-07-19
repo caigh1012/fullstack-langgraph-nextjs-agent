@@ -1,15 +1,27 @@
 'use client';
 
+import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { HttpBusinessCode, HttpMessage } from '@/constants/http';
+import type { ResultVO } from '@/pojo/vo/common/result.vo';
 import { AtSign, LoaderCircle, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
-import { z } from 'zod/v3';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  EMAIL_REGEX,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from '@/constants';
 import { cn } from '@/lib/utils';
 
 const genderOptions = [
@@ -19,22 +31,61 @@ const genderOptions = [
 ] as const;
 
 const registerFormSchema = z.object({
-  username: z.string().trim().min(1, '请输入用户名'),
+  username: z
+    .string()
+    .trim()
+    .min(USERNAME_MIN_LENGTH, `用户名长度需为 ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} 位`)
+    .max(USERNAME_MAX_LENGTH, `用户名长度需为 ${USERNAME_MIN_LENGTH}-${USERNAME_MAX_LENGTH} 位`),
   email: z
     .string()
     .trim()
-    .refine((value) => value === '' || z.string().email().safeParse(value).success, '请输入有效邮箱'),
-  password: z.string().min(1, '请输入密码'),
+    .refine((value) => value === '' || EMAIL_REGEX.test(value), '请输入有效邮箱'),
+  password: z
+    .string()
+    .min(PASSWORD_MIN_LENGTH, `密码长度需为 ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} 位`)
+    .max(PASSWORD_MAX_LENGTH, `密码长度需为 ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} 位`),
   gender: z.enum(['MALE', 'FEMALE', 'UNKNOWN']),
 });
 
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
-interface RegisterFormProps {
-  className?: string;
+async function registerRequest(values: RegisterFormValues) {
+  const response = await fetch('/api/user/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'same-origin',
+    body: JSON.stringify({
+      ...values,
+      email: values.email || undefined,
+    }),
+  });
+
+  let result: ResultVO<null>;
+
+  try {
+    result = (await response.json()) as ResultVO<null>;
+  } catch {
+    throw new Error(response.ok ? HttpMessage.INTERNAL_SERVER_ERROR : HttpMessage.REQUEST_FAILED);
+  }
+
+  if (!response.ok || result.code !== HttpBusinessCode.SUCCESS) {
+    throw new Error(result.message || HttpMessage.REQUEST_FAILED);
+  }
+
+  return result;
 }
 
-export default function RegisterForm({ className }: RegisterFormProps) {
+export default function RegisterForm() {
+  const router = useRouter();
+  const registerMutation = useMutation({
+    mutationFn: registerRequest,
+    onError: (error) => {
+      toast.error(error.message, {});
+    },
+  });
+
   const {
     control,
     register,
@@ -47,31 +98,27 @@ export default function RegisterForm({ className }: RegisterFormProps) {
       username: '',
       email: '',
       password: '',
-      gender: 'UNKNOWN',
+      gender: 'MALE',
     },
     mode: 'onBlur',
   });
 
   const onSubmit = async (values: RegisterFormValues) => {
-    await new Promise((resolve) => {
-      window.setTimeout(resolve, 400);
-    });
+    try {
+      await registerMutation.mutateAsync(values);
 
-    // setSubmittedUser({
-    //   username: values.username,
-    //   gender: values.gender,
-    // });
-
-    reset({
-      username: values.username,
-      email: values.email,
-      password: '',
-      gender: values.gender,
-    });
+      reset({
+        username: '',
+        email: '',
+        password: '',
+        gender: 'MALE',
+      });
+      router.replace('/login');
+    } catch {}
   };
 
   return (
-    <Card className={cn('w-full max-w-md border-border/60 bg-card/95 py-0 gap-0 shadow-xl backdrop-blur', className)}>
+    <Card className={cn('w-full max-w-md border-border/60 bg-card/95 py-0 gap-0 shadow-xl backdrop-blur')}>
       <CardHeader className="gap-2 border-b border-border/60 py-6">
         <div className="flex items-center gap-2 text-primary">
           <ShieldCheck className="size-4" />
@@ -89,9 +136,7 @@ export default function RegisterForm({ className }: RegisterFormProps) {
               <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="username"
-                autoComplete="username"
                 placeholder="请输入用户名"
-                aria-invalid={Boolean(errors.username)}
                 className="h-10 pl-10 text-sm"
                 {...register('username')}
               />
@@ -106,9 +151,7 @@ export default function RegisterForm({ className }: RegisterFormProps) {
               <Input
                 id="password"
                 type="password"
-                autoComplete="new-password"
                 placeholder="请输入密码"
-                aria-invalid={Boolean(errors.password)}
                 className="h-10 pl-10 text-sm"
                 {...register('password')}
               />
@@ -125,7 +168,6 @@ export default function RegisterForm({ className }: RegisterFormProps) {
                 type="email"
                 autoComplete="email"
                 placeholder="请输入邮箱（选填）"
-                aria-invalid={Boolean(errors.email)}
                 className="h-10 pl-10 text-sm"
                 {...register('email')}
               />
@@ -163,8 +205,8 @@ export default function RegisterForm({ className }: RegisterFormProps) {
           <Button
             className="h-10 w-full text-sm cursor-pointer"
             type="submit"
-            disabled={isSubmitting}>
-            {isSubmitting ? (
+            disabled={isSubmitting || registerMutation.isPending}>
+            {isSubmitting || registerMutation.isPending ? (
               <>
                 <LoaderCircle className="size-4 animate-spin" />
                 Registering...

@@ -1,17 +1,17 @@
 import { Gender } from '../../../../generated/prisma/client';
 
 /**
- * 登录用户 DTO
+ * 登录用户 BO
  */
-export interface LoginDto {
+export interface LoginBo {
   username: string;
   password: string;
 }
 
 /**
- * 注册用户 DTO
+ * 注册用户 BO
  */
-export interface RegisterUserDto {
+export interface RegisterUserBo {
   username: string;
   password: string;
   email?: string;

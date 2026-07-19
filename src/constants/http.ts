@@ -31,6 +31,9 @@ class HttpMessage {
   static readonly REGISTER_FAILED = '注册失败';
   static readonly REGISTER_SUCCESS = '注册成功';
   static readonly UNAUTHORIZED = '未授权，请先登录';
+  static readonly TOKEN_INVALID = '非法token, 重新登录';
+  static readonly TOKEN_EXPIRED = 'token过期, 重新登录';
+  static readonly LOGOUT_SUCCESS = '退出登录成功';
   static readonly INTERNAL_SERVER_ERROR = '服务器错误，请稍后重试';
   static readonly REQUEST_SUCCESS = '请求成功';
   static readonly REQUEST_FAILED = '请求失败';

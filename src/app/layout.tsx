@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
+import { Toaster } from '@/components/ui/sonner';
 import QueryProvider from '@/helper/query-provider';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/helper/theme-provider';
@@ -33,10 +34,24 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn('h-full', 'antialiased', geistSans.variable, geistMono.variable, 'font-sans', inter.variable, geistHeading.variable)}>
+      className={cn(
+        'h-full',
+        'antialiased',
+        geistSans.variable,
+        geistMono.variable,
+        'font-sans',
+        inter.variable,
+        geistHeading.variable,
+      )}>
       <body>
         <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            {children}
+            <Toaster
+              richColors
+              position="top-center"
+            />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
