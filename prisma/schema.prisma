@@ -19,11 +19,11 @@ enum Gender {
 }
 
 model User {
-  id               BigInt @id @default(autoincrement())
-  username         String @unique
-  nickname         String
-  email            String? @unique
-  password         String
+  id               String @id
+  username         String @unique @db.VarChar(20)
+  nickname         String @db.VarChar(12)
+  email            String? @db.VarChar(255)
+  password         String @db.VarChar(16)
   gender           Gender? @default(UNKNOWN)
   avatarUrl        String?
 }

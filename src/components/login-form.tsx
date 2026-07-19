@@ -95,7 +95,7 @@ export default function LoginForm({ className }: LoginFormProps) {
           </div>
 
           <Button
-            className="h-10 w-full text-sm"
+            className="h-10 w-full text-sm cursor-pointer"
             type="submit"
             disabled={isSubmitting}>
             {isSubmitting ? (

@@ -20,7 +20,6 @@ const genderOptions = [
 
 const registerFormSchema = z.object({
   username: z.string().trim().min(1, '请输入用户名'),
-  nickname: z.string().trim().min(1, '请输入昵称'),
   email: z
     .string()
     .trim()
@@ -46,7 +45,6 @@ export default function RegisterForm({ className }: RegisterFormProps) {
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
       username: '',
-      nickname: '',
       email: '',
       password: '',
       gender: 'UNKNOWN',
@@ -61,13 +59,11 @@ export default function RegisterForm({ className }: RegisterFormProps) {
 
     // setSubmittedUser({
     //   username: values.username,
-    //   nickname: values.nickname,
     //   gender: values.gender,
     // });
 
     reset({
       username: values.username,
-      nickname: values.nickname,
       email: values.email,
       password: '',
       gender: values.gender,
@@ -102,22 +98,6 @@ export default function RegisterForm({ className }: RegisterFormProps) {
             </div>
             {errors.username ? <p className="text-xs text-destructive">{errors.username.message}</p> : null}
           </div>
-
-          {/* <div className="space-y-2">
-            <Label htmlFor="nickname">Nickname</Label>
-            <div className="relative">
-              <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="nickname"
-                autoComplete="nickname"
-                placeholder="请输入昵称"
-                aria-invalid={Boolean(errors.nickname)}
-                className="h-10 pl-10 text-sm"
-                {...register('nickname')}
-              />
-            </div>
-            {errors.nickname ? <p className="text-xs text-destructive">{errors.nickname.message}</p> : null}
-          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="password">密码</Label>
@@ -181,7 +161,7 @@ export default function RegisterForm({ className }: RegisterFormProps) {
           </div>
 
           <Button
-            className="h-10 w-full text-sm"
+            className="h-10 w-full text-sm cursor-pointer"
             type="submit"
             disabled={isSubmitting}>
             {isSubmitting ? (
