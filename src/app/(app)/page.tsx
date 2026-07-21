@@ -1,10 +1,12 @@
-import { Button } from '@/components/ui/button';
+'use client';
+
+import Thread from '@/components/thread';
 
 export default function App() {
   return (
-    <div>
-      HELLO WORLD
-      <Button>Click me</Button>
-    </div>
+    <Thread
+      threadId="123"
+      onFirstMessageSent={() => console.log('first message sent')}
+    />
   );
 }

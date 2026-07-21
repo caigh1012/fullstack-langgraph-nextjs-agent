@@ -5,9 +5,9 @@ import { UserInfoProvider } from '@/contexts/userinfo-context';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { SvgIcon } from '@/components/svg-icon';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import Image from 'next/image';
 import { LeftSidebar } from '@/components/left-sidebar';
 /**
  * 用户登录后的布局
@@ -56,13 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       href="https://github.com/caigh1012/fullstack-langgraph-nextjs-agent"
                       target="_blank"
                       rel="noreferrer">
-                      <Image
-                        className="icon fill-current"
-                        width={24}
-                        height={24}
-                        src="/github.svg"
-                        alt="GitHub"
-                      />
+                      <SvgIcon iconName="github" />
                     </a>
                   </Button>
                 </div>

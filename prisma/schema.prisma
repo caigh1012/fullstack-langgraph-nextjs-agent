@@ -19,20 +19,26 @@ enum Gender {
 }
 
 model User {
-  id               String @id
-  username         String @unique @db.VarChar(20)
-  nickname         String @db.VarChar(12)
-  email            String? @db.VarChar(255)
-  password         String @db.VarChar(16)
-  gender           Gender? @default(UNKNOWN)
-  avatarUrl        String?
+  id         String      @id
+  username   String      @unique @db.VarChar(20)
+  nickname   String      @db.VarChar(12)
+  email      String?     @db.VarChar(255)
+  password   String      @db.VarChar(16)
+  gender     Gender?     @default(UNKNOWN)
+  avatarUrl  String?
+  threads    Thread[]
+  mcpServers MCPServer[]
 }
 
 model Thread {
   id        String   @id @default(uuid())
   title     String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model MCPServer {
@@ -40,6 +46,8 @@ model MCPServer {
   name      String            @unique
   type      MCPServerType
   enabled   Boolean           @default(true)
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   // For stdio servers
   command   String?
   args      Json?
@@ -55,6 +63,8 @@ model MCPServer {
   oauthStatus   String?       @default("UNKNOWN") // UNKNOWN | NOT_REQUIRED | REQUIRED | CONNECTED | EXPIRED
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+
+  @@index([userId])
 }
 
 enum MCPServerType {
