@@ -4,6 +4,8 @@ import { useState } from 'react';
 import MessageInput from './message-input';
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import MessageList from './message-list';
+import { PromptInputMessage } from './ai-elements/prompt-input';
+import { useRouter } from 'next/navigation';
 
 interface ThreadProps {
   threadId: string;
@@ -17,7 +19,16 @@ interface Message {
 }
 
 export default function Thread({ threadId }: ThreadProps) {
+  console.log('触发了');
+
   const [messages, setMessages] = useState<Message[]>([]);
+  const router = useRouter();
+
+  const handleSubmit = (message: PromptInputMessage) => {
+    // setMessages((prev) => [...prev, { key: nanoid(36), content: message.text, role: 'user' }]);
+    router.replace(`/thread/${threadId}`);
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col">
       {messages.length > 0 ? (
@@ -32,7 +43,7 @@ export default function Thread({ threadId }: ThreadProps) {
           <div className="shrink-0">
             <div className="w-full p-4 pb-6">
               <div className="mx-auto max-w-3xl">
-                <MessageInput />
+                <MessageInput sendMessage={handleSubmit} />
               </div>
             </div>
           </div>
@@ -44,7 +55,7 @@ export default function Thread({ threadId }: ThreadProps) {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Chat with your Agent</h1>
               <p className="text-muted-foreground mt-2">Start a new conversation by sending a message</p>
             </div>
-            <MessageInput />
+            <MessageInput sendMessage={handleSubmit} />
           </div>
         </div>
       )}

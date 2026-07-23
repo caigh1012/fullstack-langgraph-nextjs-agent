@@ -100,7 +100,7 @@ fullstack-langgraph-nextjs-agent/
 
 - Use an interface to define the Props type.
 - Use `React.FC <Props>` or function declarations.
-- Use `clsx` to conditionally apply classes.
+- Use `cn` to conditionally apply classes.
 - Use `tailwindcss` to build CSS styles.
 - Use the hooks from the react-use library as much as possible. Custom hooks can be created if the requirements cannot be met.
 - Use `zod` to validate data types.

@@ -127,7 +127,9 @@ export function LeftSidebar() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction>确认退出</AlertDialogAction>
+            <AlertDialogAction asChild>
+              <Button onClick={logout}>确认退出</Button>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

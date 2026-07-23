@@ -17,15 +17,26 @@ import { useEffect, useRef, useState } from 'react';
 import { useThreads } from '@/hooks/use-threads';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Input } from './ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './ui/alert-dialog';
 
 /**
  * 会话列表组件
  */
 export function ThreadList() {
   const router = useRouter();
-  const { threads, createThread, deleteThread, refetchThreads } = useThreads();
-  const [isCreating, setIsCreating] = useState(false);
+  const { threads, createThread, activeThreadId, deleteThread, refetchThreads } = useThreads();
   const [filter, setFilter] = useState('');
+  const [open, setOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -34,19 +45,6 @@ export function ThreadList() {
   const [refreshing, setRefreshing] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pathname = usePathname();
-
-  /**
-   * 添加新的会话
-   */
-  const handleCreateThread = async () => {
-    // setIsCreating(true);
-    // try {
-    //   const newThread = await createThread();
-    //   router.push(`/thread/${newThread.id}`);
-    // } finally {
-    //   setIsCreating(false);
-    // }
-  };
 
   /**
    * 本地搜索过滤
@@ -62,6 +60,7 @@ export function ThreadList() {
    */
   const handleDeleteThread = async (threadId: string) => {
     setPendingDeleteId(threadId);
+    setOpen(true);
   };
 
   /**
@@ -163,9 +162,8 @@ export function ThreadList() {
         <Button
           className="shrink-0 grow"
           variant="outline"
-          onClick={handleCreateThread}
-          disabled={isCreating}>
-          {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CirclePlus className="h-4 w-4" />}
+          onClick={() => router.push('/')}>
+          <CirclePlus className="h-4 w-4" />
           <span>添加会话</span>
         </Button>
         <Button
@@ -189,109 +187,123 @@ export function ThreadList() {
             className="pl-8"
           />
         </div>
-        <SidebarGroupContent className="mt-2 min-h-0 flex-1 overflow-y-auto group-data-[collapsible=icon]:hidden">
-          {/* 侧边栏内容：会话列表 */}
-          <SidebarMenu>
-            {filtered.length === 0 ? (
-              <SidebarMenuItem>
-                <div className="text-center px-4 py-4 text-xs text-muted-foreground">暂无会话</div>
-              </SidebarMenuItem>
-            ) : (
-              <>
-                {filtered.map((thread) => {
-                  const isRenaming = renamingId === thread.id;
-                  return (
-                    <SidebarMenuItem key={thread.id}>
-                      {!isRenaming ? (
-                        <>
-                          <SidebarMenuButton
-                            size="lg"
-                            isActive={pathname === `/thread/${thread.id}`}
-                            onClick={() => handleClickSession(thread.id)}
-                            className="h-auto items-start py-2">
-                            <div className="flex min-w-0 flex-1 flex-col">
-                              <div className="truncate leading-5 font-medium">
-                                {thread.title || `Thread ${thread.id.slice(0, 8)}`}
-                              </div>
-                              <div className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                                {/* <div className="min-w-0 flex-1 truncate">{session.preview}</div> */}
-                                <div className="shrink-0 tabular-nums">
-                                  {new Date(thread.createdAt).toLocaleDateString()}
+        <AlertDialog open={open}>
+          <SidebarGroupContent className="mt-2 min-h-0 flex-1 overflow-y-auto group-data-[collapsible=icon]:hidden">
+            {/* 侧边栏内容：会话列表 */}
+            <SidebarMenu>
+              {filtered.length === 0 ? (
+                <SidebarMenuItem>
+                  <div className="text-center px-4 py-4 text-xs text-muted-foreground">暂无会话</div>
+                </SidebarMenuItem>
+              ) : (
+                <>
+                  {filtered.map((thread) => {
+                    const isRenaming = renamingId === thread.id;
+                    return (
+                      <SidebarMenuItem key={thread.id}>
+                        {!isRenaming ? (
+                          <>
+                            <SidebarMenuButton
+                              size="lg"
+                              isActive={pathname === `/thread/${thread.id}`}
+                              onClick={() => handleClickSession(thread.id)}
+                              className="h-auto items-start py-2">
+                              <div className="flex min-w-0 flex-1 flex-col">
+                                <div className="truncate leading-5 font-medium">
+                                  {thread.title || `Thread ${thread.id.slice(0, 8)}`}
+                                </div>
+                                <div className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                                  {/* <div className="min-w-0 flex-1 truncate">{session.preview}</div> */}
+                                  <div className="shrink-0 tabular-nums">
+                                    {new Date(thread.createdAt).toLocaleDateString()}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </SidebarMenuButton>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <SidebarMenuAction
-                                showOnHover
-                                className="top-[50%]! translate-y-[-50%]"
-                                onClick={(e) => e.stopPropagation()}
-                                aria-label="会话菜单">
-                                <MoreHorizontal />
-                              </SidebarMenuAction>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              side="right"
-                              sideOffset={6}
-                              className="w-44">
-                              <DropdownMenuItem onSelect={() => startRename(thread.id, thread.title)}>
-                                <Pencil />
-                                重命名
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onSelect={() => handleDeleteThread(thread.id)}>
-                                <Trash2 />
-                                删除会话
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      ) : (
-                        <div
-                          className="bg-sidebar-accent/40 border-sidebar-border/60 flex items-center gap-2 rounded-md border p-2"
-                          onClick={(e) => e.stopPropagation()}>
-                          <Input
-                            ref={inputRef}
-                            value={renameValue}
-                            disabled={savingRename}
-                            onChange={(e) => setRenameValue(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveRename();
-                              if (e.key === 'Escape') cancelRename();
-                            }}
-                            placeholder="输入会话名称"
-                            className="h-8 flex-1 text-sm"
-                          />
-                          <Button
-                            disabled={savingRename}
-                            onClick={saveRename}
-                            size="icon-xs"
-                            aria-label="保存重命名">
-                            {savingRename ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Check className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            onClick={cancelRename}
-                            size="icon-xs"
-                            aria-label="取消重命名">
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </SidebarMenuItem>
-                  );
-                })}
-              </>
-            )}
-          </SidebarMenu>
-        </SidebarGroupContent>
+                            </SidebarMenuButton>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <SidebarMenuAction
+                                  className="top-[50%]! translate-y-[-50%] mr-1"
+                                  onClick={(e) => e.stopPropagation()}>
+                                  <MoreHorizontal />
+                                </SidebarMenuAction>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="start"
+                                side="right"
+                                sideOffset={6}
+                                className="w-44">
+                                <DropdownMenuItem onSelect={() => startRename(thread.id, thread.title)}>
+                                  <Pencil />
+                                  重命名
+                                </DropdownMenuItem>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onSelect={() => handleDeleteThread(thread.id)}>
+                                    <Trash2 />
+                                    删除会话
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        ) : (
+                          <div
+                            className="bg-sidebar-accent/40 border-sidebar-border/60 flex items-center gap-2 rounded-md border p-2"
+                            onClick={(e) => e.stopPropagation()}>
+                            <Input
+                              ref={inputRef}
+                              value={renameValue}
+                              disabled={savingRename}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveRename();
+                                if (e.key === 'Escape') cancelRename();
+                              }}
+                              placeholder="输入会话名称"
+                              className="h-8 flex-1 text-sm"
+                            />
+                            <Button
+                              disabled={savingRename}
+                              onClick={saveRename}
+                              size="icon-xs">
+                              {savingRename ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              onClick={cancelRename}
+                              size="icon-xs">
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>你确定要删除会话吗？</AlertDialogTitle>
+              <AlertDialogDescription>删除后将无法恢复，是否继续？</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild>
+                <Button onClick={() => setOpen(false)}>取消</Button>
+              </AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button onClick={() => confirmDeleteThread()}>确认</Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SidebarGroup>
     </>
   );

@@ -30,6 +30,7 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import { CheckIcon, GlobeIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { memo, useCallback, useState } from 'react';
 
 const models = [
@@ -103,7 +104,7 @@ const ModelItem = memo(({ m, selectedModel, onSelect }: ModelItemProps) => {
 
 ModelItem.displayName = 'ModelItem';
 
-export default function MessageInput() {
+export default function MessageInput({ sendMessage }: { sendMessage: (message: PromptInputMessage) => void }) {
   const [model, setModel] = useState<string>(models[0].id);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const [status, setStatus] = useState<'submitted' | 'streaming' | 'ready' | 'error'>('ready');
@@ -116,6 +117,7 @@ export default function MessageInput() {
   }, []);
 
   const handleSubmit = useCallback((message: PromptInputMessage) => {
+    sendMessage(message);
     const hasText = Boolean(message.text);
     const hasAttachments = Boolean(message.files?.length);
 

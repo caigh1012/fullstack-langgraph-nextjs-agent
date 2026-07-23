@@ -1,7 +1,8 @@
 'use client';
 
-import { HttpBusinessCode, HttpCode } from '@/constants/http';
+import { HttpBusinessCode } from '@/constants/http';
 import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -26,6 +27,10 @@ interface UserContextValue {
 
 const UserInfoContext = createContext<UserContextValue | null>(null);
 
+/**
+ * 用户登录信息
+ * @returns
+ */
 export function UserInfoProvider({ children }: { children: React.ReactNode }) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -52,7 +57,7 @@ export function UserInfoProvider({ children }: { children: React.ReactNode }) {
       setUserInfo(null);
       setLoggingOut(false);
       toast.success('退出成功');
-      redirect('/');
+      redirect('/login');
     } else {
       setLoggingOut(false);
       toast.error('退出失败');
