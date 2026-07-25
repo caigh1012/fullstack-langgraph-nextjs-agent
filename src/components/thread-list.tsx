@@ -13,8 +13,8 @@ import {
   SidebarMenuItem,
 } from './ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { useThreads } from '@/hooks/use-threads';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Thread, useThreads } from '@/hooks/use-threads';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Input } from './ui/input';
 import {
@@ -28,21 +28,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from './ui/alert-dialog';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * 会话列表组件
  */
 export function ThreadList() {
+  const queryClient = useQueryClient();
   const router = useRouter();
-  const { threads, createThread, activeThreadId, deleteThread, refetchThreads } = useThreads();
+  const { threads, deleteThread, updateThreadTitle, refetchThreads, isLoadingThreads, threadError } = useThreads();
   const [filter, setFilter] = useState('');
-  const [open, setOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false); // 删除会话弹窗状态
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+
+  /// 正在保存命名状态
   const [savingRename, setSavingRename] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // 刷新状态管理
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pathname = usePathname();
 
@@ -60,27 +64,30 @@ export function ThreadList() {
    */
   const handleDeleteThread = async (threadId: string) => {
     setPendingDeleteId(threadId);
-    setOpen(true);
+    setDeleteModalOpen(true);
   };
 
   /**
    * 确认删除会话
    */
-  const confirmDeleteThread = async () => {
+  const confirmDeleteThread = useCallback(async () => {
     if (!pendingDeleteId) {
       return;
     }
-    setDeletingId(pendingDeleteId);
     try {
       await deleteThread(pendingDeleteId);
-      setPendingDeleteId(null);
-    } catch (e) {
-      console.error('Delete failed', e);
-      alert('Failed to delete thread. Please try again.');
+      queryClient.setQueryData(['threads'], (old: Thread[] = []) =>
+        old.filter((thread) => thread.id !== pendingDeleteId),
+      );
+      queryClient.removeQueries({ queryKey: ['messages', pendingDeleteId] });
+      toast.success('会话删除成功');
+      // 删除后，重定向到会话列表页
+      router.replace('/');
     } finally {
-      setDeletingId(null);
+      setPendingDeleteId(null);
+      setDeleteModalOpen(false);
     }
-  };
+  }, [pendingDeleteId, deleteThread, queryClient, router]);
 
   /**
    * 进入当前会话详情
@@ -112,20 +119,12 @@ export function ThreadList() {
     setSavingRename(true);
     try {
       const nextTitle = renameValue.trim() || 'Untitled thread';
-      const response = await fetch('/api/agent/threads', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: renamingId, title: nextTitle }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to rename thread');
-      }
+      await updateThreadTitle(renamingId, nextTitle);
       // 刷新会话列表
       await refetchThreads();
+      toast.success('会话命名成功');
       setRenamingId(null);
       setRenameValue('');
-    } catch (e) {
-      console.error('Rename failed', e);
     } finally {
       setSavingRename(false);
     }
@@ -136,6 +135,7 @@ export function ThreadList() {
    */
   const startRename = (id: string, title?: string | null) => {
     setRenamingId(id);
+    // 初始化命名输入框值
     setRenameValue(title || '');
   };
 
@@ -144,6 +144,7 @@ export function ThreadList() {
    */
   const cancelRename = () => {
     setRenamingId(null);
+    // 清空命名输入框值
     setRenameValue('');
   };
 
@@ -151,8 +152,8 @@ export function ThreadList() {
     if (!renamingId || !inputRef.current) {
       return;
     }
+    // 确保命名输入框获得焦点
     inputRef.current.focus();
-    inputRef.current.select();
   }, [renamingId]);
 
   return (
@@ -187,11 +188,16 @@ export function ThreadList() {
             className="pl-8"
           />
         </div>
-        <AlertDialog open={open}>
+        <AlertDialog open={deleteModalOpen}>
           <SidebarGroupContent className="mt-2 min-h-0 flex-1 overflow-y-auto group-data-[collapsible=icon]:hidden">
             {/* 侧边栏内容：会话列表 */}
             <SidebarMenu>
-              {filtered.length === 0 ? (
+              {isLoadingThreads ? (
+                <SidebarMenuItem>
+                  <div className="text-center px-4 py-4 text-xs text-muted-foreground">加载中...</div>
+                </SidebarMenuItem>
+              ) : null}
+              {!isLoadingThreads && filtered.length === 0 ? (
                 <SidebarMenuItem>
                   <div className="text-center px-4 py-4 text-xs text-muted-foreground">暂无会话</div>
                 </SidebarMenuItem>
@@ -213,7 +219,6 @@ export function ThreadList() {
                                   {thread.title || `Thread ${thread.id.slice(0, 8)}`}
                                 </div>
                                 <div className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                                  {/* <div className="min-w-0 flex-1 truncate">{session.preview}</div> */}
                                   <div className="shrink-0 tabular-nums">
                                     {new Date(thread.createdAt).toLocaleDateString()}
                                   </div>
@@ -296,7 +301,7 @@ export function ThreadList() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel asChild>
-                <Button onClick={() => setOpen(false)}>取消</Button>
+                <Button onClick={() => setDeleteModalOpen(false)}>取消</Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
                 <Button onClick={() => confirmDeleteThread()}>确认</Button>

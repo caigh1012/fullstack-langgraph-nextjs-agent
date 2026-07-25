@@ -1,33 +1,52 @@
 'use client';
 
-import { useState } from 'react';
 import MessageInput from './message-input';
 import { Conversation, ConversationContent } from './ai-elements/conversation';
 import MessageList from './message-list';
+import { useChatMessage } from '@/hooks/use-chat-message';
+import { Loader2 } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
 import { PromptInputMessage } from './ai-elements/prompt-input';
-import { useRouter } from 'next/navigation';
+import { useThreadContext } from '@/contexts/thread-context';
 
 interface ThreadProps {
   threadId: string;
-  onFirstMessageSent?: (threadId: string) => void;
+  onFirstMessageSent?: (title: string) => void;
 }
 
-interface Message {
-  key: string;
-  content: string;
-  role: 'user' | 'assistant';
-}
+export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
+  const { firstMessage, setFirstMessage } = useThreadContext();
+  const { messages, isLoadingHistory, sendMessage } = useChatMessage({ threadId });
 
-export default function Thread({ threadId }: ThreadProps) {
-  console.log('触发了');
+  const handleFirstMessageSent = useCallback(
+    async (message: PromptInputMessage) => {
+      const wasEmpty = messages.length === 0;
+      if (wasEmpty && onFirstMessageSent) {
+        setFirstMessage(message);
+        await onFirstMessageSent(message.text);
+        return;
+      }
+      sendMessage(message);
+    },
+    [messages, onFirstMessageSent, sendMessage, setFirstMessage],
+  );
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const router = useRouter();
+  useEffect(() => {
+    if (firstMessage) {
+      console.log(firstMessage, '<___firstMessage');
+      sendMessage(firstMessage);
+      setFirstMessage(null);
+    }
+  }, [firstMessage, setFirstMessage, sendMessage]);
 
-  const handleSubmit = (message: PromptInputMessage) => {
-    // setMessages((prev) => [...prev, { key: nanoid(36), content: message.text, role: 'user' }]);
-    router.replace(`/thread/${threadId}`);
-  };
+  if (isLoadingHistory) {
+    return (
+      <div className="bg-background/95 supports-backdrop-filter:bg-background/60 absolute inset-0 flex items-center justify-center backdrop-blur">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground mt-2">Loading conversation history...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 flex flex-col">
@@ -43,7 +62,7 @@ export default function Thread({ threadId }: ThreadProps) {
           <div className="shrink-0">
             <div className="w-full p-4 pb-6">
               <div className="mx-auto max-w-3xl">
-                <MessageInput sendMessage={handleSubmit} />
+                <MessageInput sendMessage={handleFirstMessageSent} />
               </div>
             </div>
           </div>
@@ -55,7 +74,7 @@ export default function Thread({ threadId }: ThreadProps) {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Chat with your Agent</h1>
               <p className="text-muted-foreground mt-2">Start a new conversation by sending a message</p>
             </div>
-            <MessageInput sendMessage={handleSubmit} />
+            <MessageInput sendMessage={handleFirstMessageSent} />
           </div>
         </div>
       )}

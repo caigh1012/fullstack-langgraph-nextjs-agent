@@ -1,16 +1,17 @@
+import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import React, { createContext, useContext, useState } from 'react';
 
 interface ThreadContextType {
-  activeThreadId: string | null;
-  setActiveThreadId: (threadId: string | null) => void;
+  firstMessage: PromptInputMessage | null;
+  setFirstMessage: (message: PromptInputMessage | null) => void;
 }
 
 const ThreadContext = createContext<ThreadContextType | null>(null);
 
 export function ThreadProvider({ children }: { children: React.ReactNode }) {
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [firstMessage, setFirstMessage] = useState<PromptInputMessage | null>(null);
 
-  return <ThreadContext.Provider value={{ activeThreadId, setActiveThreadId }}>{children}</ThreadContext.Provider>;
+  return <ThreadContext.Provider value={{ firstMessage, setFirstMessage }}>{children}</ThreadContext.Provider>;
 }
 
 export function useThreadContext() {

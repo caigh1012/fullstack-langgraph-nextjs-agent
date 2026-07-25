@@ -1,5 +1,4 @@
 import { HttpBusinessCode } from '@/constants/http';
-import { useThreadContext } from '@/contexts/thread-context';
 import { getUrl } from '@/utils/get-fetch-url';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback } from 'react';
@@ -14,12 +13,10 @@ export interface Thread {
 
 export interface UseThreadsReturn {
   threads: Thread[];
-  activeThreadId: string | null;
   isLoadingThreads: boolean;
   threadError: Error | null;
   updateThreadTitle: (threadId: string, title: string) => Promise<void>;
   createThread: (threadId: string, title?: string) => Promise<void>;
-  setActiveThreadId: (threadId: string) => void;
   deleteThread: (threadId: string) => Promise<void>;
   refetchThreads: () => Promise<unknown>;
 }
@@ -28,8 +25,6 @@ export interface UseThreadsReturn {
  * Thread Hooks
  */
 export function useThreads(): UseThreadsReturn {
-  const { activeThreadId, setActiveThreadId } = useThreadContext();
-
   // 获取 Thread 列表
   const fetchThreads = useCallback(async () => {
     const response = await fetch(getUrl('threads'), {
@@ -39,6 +34,7 @@ export function useThreads(): UseThreadsReturn {
       let errorMessage = 'Failed to load threads';
       const errorBody = await response.json();
       errorMessage = errorBody.message || errorBody.error || errorMessage;
+      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
     const data = await response.json();
@@ -59,6 +55,7 @@ export function useThreads(): UseThreadsReturn {
       let errorMessage = 'Failed to load threads';
       const errorBody = await response.json();
       errorMessage = errorBody.message || errorBody.error || errorMessage;
+      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
     const data = await response.json();
@@ -75,12 +72,13 @@ export function useThreads(): UseThreadsReturn {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: threadId, title: title }),
+      body: JSON.stringify({ threadId, title }),
     });
     if (!response.ok) {
       let errorMessage = 'Failed to update thread title';
       const errorBody = await response.json();
       errorMessage = errorBody.message || errorBody.error || errorMessage;
+      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
     const data = await response.json();
@@ -97,12 +95,13 @@ export function useThreads(): UseThreadsReturn {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: threadId }),
+      body: JSON.stringify({ threadId }),
     });
     if (!response.ok) {
       let errorMessage = 'Failed to delete thread';
       const errorBody = await response.json();
       errorMessage = errorBody.message || errorBody.error || errorMessage;
+      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
     const data = await response.json();
@@ -127,12 +126,10 @@ export function useThreads(): UseThreadsReturn {
 
   return {
     threads,
-    activeThreadId,
     isLoadingThreads: isLoadingThreads,
     threadError: threadError as Error | null,
     updateThreadTitle,
     createThread,
-    setActiveThreadId,
     deleteThread,
     refetchThreads: refetchThreadsQuery,
   };
