@@ -1,15 +1,15 @@
-import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
+import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 import React, { createContext, useContext, useState } from 'react';
 
 export interface FirstMessageContextType {
-  firstMessage: PromptInputMessage | null;
-  setFirstMessage: (message: PromptInputMessage | null) => void;
+  firstMessage: MessageStreamDto | null;
+  setFirstMessage: (message: MessageStreamDto | null) => void;
 }
 
 const FirstMessageContext = createContext<FirstMessageContextType | null>(null);
 
 export function FirstMessageProvider({ children }: { children: React.ReactNode }) {
-  const [firstMessage, setFirstMessage] = useState<PromptInputMessage | null>(null);
+  const [firstMessage, setFirstMessage] = useState<MessageStreamDto | null>(null);
 
   return (
     <FirstMessageContext.Provider value={{ firstMessage, setFirstMessage }}>{children}</FirstMessageContext.Provider>

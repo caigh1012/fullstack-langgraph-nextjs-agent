@@ -1,19 +1,17 @@
+import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants/models';
 import { AgentBuilder } from './builder';
 import { postgresCheckpointer } from './memory';
 import { createChatModel } from './models';
 
-let setupPromise: Promise<void> | null = null;
-
 export interface AgentConfigOptions {
   model?: string;
   provider?: string; // 'google' | 'openai' etc.
-  systemPrompt?: string; // system prompt override
-  tools?: unknown[]; // tools from registry or direct tool objects
-  approveAllTools?: boolean; // if true, skip tool approval prompts
+  // systemPrompt?: string; // system prompt override
+  // tools?: unknown[]; // tools from registry or direct tool objects
+  // approveAllTools?: boolean; // if true, skip tool approval prompts
 }
 
-export const DEFAULT_MODEL_PROVIDER = 'deepseek';
-export const DEFAULT_MODEL_NAME = 'deepseek-v4-pro';
+let setupPromise: Promise<void> | null = null;
 
 async function setupOnce() {
   if (!setupPromise) {
@@ -28,9 +26,9 @@ async function setupOnce() {
 
 async function createAgent(cfg?: AgentConfigOptions) {
   const provider = cfg?.provider || DEFAULT_MODEL_PROVIDER; // 提供商
-  const modelName = cfg?.model || DEFAULT_MODEL_NAME; // 模型名称
+  const model = cfg?.model || DEFAULT_MODEL_NAME; // 模型名称
 
-  const llm = createChatModel({ provider, model: modelName, temperature: 1 });
+  const llm = createChatModel({ provider, model, temperature: 1 });
 
   const agent = new AgentBuilder({
     llm,

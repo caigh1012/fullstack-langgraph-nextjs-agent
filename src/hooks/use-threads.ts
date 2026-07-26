@@ -1,14 +1,15 @@
 import { HttpBusinessCode } from '@/constants/http';
+import { useUserInfoContext } from '@/contexts/userinfo-context';
 import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export interface UseThreadsReturn {
   threads: ThreadVO[];
   isLoadingThreads: boolean;
   threadError: Error | null;
-  updateThreadTitle: (threadId: string, title: string) => Promise<void>;
+  updateThread: (threadId: string, title: string) => Promise<void>;
   createThread: (threadId: string, title?: string) => Promise<void>;
   deleteThread: (threadId: string) => Promise<void>;
   refetchThreads: () => Promise<unknown>;
@@ -18,6 +19,8 @@ export interface UseThreadsReturn {
  * Thread Hooks
  */
 export function useThreads(): UseThreadsReturn {
+  const { userInfo } = useUserInfoContext();
+
   // 获取 Thread 列表
   const fetchThreads = useCallback(async () => {
     const response = await fetch('/api/agent/threads', {
@@ -59,7 +62,7 @@ export function useThreads(): UseThreadsReturn {
   }, []);
 
   // 修改 Thread 标题
-  const updateThreadTitle = useCallback(async (threadId: string, title: string): Promise<void> => {
+  const updateThread = useCallback(async (threadId: string, title: string): Promise<void> => {
     const response = await fetch('/api/agent/threads', {
       method: 'PATCH',
       headers: {
@@ -117,11 +120,19 @@ export function useThreads(): UseThreadsReturn {
     queryFn: () => fetchThreads(),
   });
 
+  /**
+   * 监听用户信息变化，刷新会话列表
+   */
+  useEffect(() => {
+    if (!userInfo?.id) return;
+    refetchThreadsQuery();
+  }, [userInfo?.id, refetchThreadsQuery]);
+
   return {
     threads,
     isLoadingThreads: isLoadingThreads,
     threadError: threadError as Error | null,
-    updateThreadTitle,
+    updateThread,
     createThread,
     deleteThread,
     refetchThreads: refetchThreadsQuery,

@@ -8,7 +8,7 @@ export async function getThreadList(userId: string) {
   try {
     return await prisma.thread.findMany({
       where: { userId },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
   } catch (error) {
     throw error;

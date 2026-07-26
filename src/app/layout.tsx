@@ -33,6 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-color-mode="system"
       suppressHydrationWarning
       className={cn(
         'h-full',

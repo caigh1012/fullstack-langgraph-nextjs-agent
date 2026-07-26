@@ -6,8 +6,8 @@ import MessageList from './message-list';
 import { useChatMessage } from '@/hooks/use-chat-message';
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
-import { PromptInputMessage } from './ai-elements/prompt-input';
 import { useFirstMessageContext } from '@/contexts/first-message-context';
+import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 
 interface ThreadProps {
   threadId?: string;
@@ -22,36 +22,39 @@ export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
    * 处理输入的消息，如果是第一个消息，先进行存储调用 onFirstMessageSent 回调函数
    */
   const handleMessageSent = useCallback(
-    async (message: PromptInputMessage) => {
+    async (message: MessageStreamDto) => {
       const wasEmpty = messages.length === 0;
       // 如果没有 threadId，且是第一个消息，调用 onFirstMessageSent 回调函数
-      if (!threadId && wasEmpty && onFirstMessageSent) {
+      if (wasEmpty && onFirstMessageSent) {
         // 先存储第一个消息，等 onFirstMessageSent 回调函数执行完成后，再发送消息到服务器
         setFirstMessage(message);
-        await onFirstMessageSent(message.text);
+        await onFirstMessageSent(message.content);
         return;
       }
       // 非二次消息，直接发送消息
       sendMessage(message);
     },
-    [messages, threadId, onFirstMessageSent, sendMessage, setFirstMessage],
+    [messages, onFirstMessageSent, sendMessage, setFirstMessage],
   );
 
   useEffect(() => {
     // 需要等历史消息加载完成之后，才能通过  queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [...old, userMessage]); 设置消息
     // 如果没有进行一次请求，就找不到 setQueryData(['messages', threadId]) 这个 key
-    if (!isPending && firstMessage) {
+    if (!isPending && !isSending && firstMessage) {
       // 如果有 threadId，且有第一个消息，直接发送消息到服务器
       sendMessage(firstMessage);
       setFirstMessage(null);
     }
-  }, [firstMessage, isPending, setFirstMessage, sendMessage]);
+  }, [firstMessage, isPending, isSending, setFirstMessage, sendMessage]);
 
-  if (isLoadingHistory && threadId) {
+  /**
+   * 第一次发送会话时，不展示 loading 状态
+   */
+  if (isLoadingHistory && threadId && !firstMessage) {
     return (
       <div className="bg-background/95 supports-backdrop-filter:bg-background/60 absolute inset-0 flex items-center justify-center gap-2 px-4 backdrop-blur">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground">历史对话加载中...</p>
+        <p className="text-muted-foreground">对话加载中...</p>
       </div>
     );
   }

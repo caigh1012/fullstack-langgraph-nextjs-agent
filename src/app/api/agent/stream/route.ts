@@ -1,5 +1,6 @@
 import { streamResponse } from '@/lib/agent/utils';
 import { withAuth } from '@/lib/auth/with-auth';
+import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 import { MessageResponse } from '@/types/messages';
 import { getThreadId } from '@/utils/get-thread-id';
 import { NextRequest } from 'next/server';
@@ -15,7 +16,13 @@ export async function POST(req: NextRequest) {
     return await withAuth(req, async (_req, payload) => {
       const userId = payload.sub as string;
       const body = await _req.json();
-      const { threadId, content: userContent } = body;
+      const {
+        threadId,
+        content: userContent,
+        model,
+        provider,
+        attachments,
+      } = body as MessageStreamDto & { threadId: string };
 
       const encoder = new TextEncoder();
       const stream = new ReadableStream<Uint8Array>({
@@ -32,10 +39,16 @@ export async function POST(req: NextRequest) {
               const iterable = await streamResponse({
                 threadId: getThreadId(userId, threadId),
                 userText: userContent,
+                opts: {
+                  model,
+                  provider,
+                  attachments,
+                },
               });
 
               for await (const chunk of iterable) {
                 // Only forward AI/tool chunks; ignore human/system
+
                 if (chunk.type === 'ai' || chunk.type === 'tool') {
                   send(chunk);
                 }
@@ -43,7 +56,7 @@ export async function POST(req: NextRequest) {
 
               // Signal completion
               controller.enqueue(encoder.encode('event: done\n'));
-              // controller.enqueue(encoder.encode('data: {}\n\n'));
+              controller.enqueue(encoder.encode('data: {}\n\n'));
             } catch (err: unknown) {
               // Emit an error event (client onerror will capture general network; providing data for diagnostics)
               controller.enqueue(encoder.encode('event: error\n'));

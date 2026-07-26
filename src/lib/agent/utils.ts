@@ -1,6 +1,15 @@
 import { ensureAgent } from '@/lib/agent';
-import { MessageOptions, MessageResponse } from '@/types/messages';
+import { FileAttachment, MessageResponse } from '@/types/messages';
 import { HumanMessage } from '@langchain/core/messages';
+
+export interface MessageOptions {
+  model?: string;
+  provider?: string;
+  // tools?: string[];
+  // allowTool?: 'allow' | 'deny';
+  // approveAllTools?: boolean; // if true, skip tool approval prompts
+  attachments?: FileAttachment[];
+}
 
 export async function streamResponse(params: { threadId: string; userText: string; opts?: MessageOptions }) {
   const { threadId, userText, opts } = params;
@@ -20,7 +29,7 @@ export async function streamResponse(params: { threadId: string; userText: strin
   const agent = await ensureAgent(opts);
 
   const iterable = await agent.stream(inputs, {
-    streamMode: ['messages', 'updates'],
+    streamMode: ['messages'],
     configurable: { thread_id: threadId },
   });
 
@@ -38,7 +47,7 @@ async function* generator(iterable: AsyncIterable<unknown>): AsyncGenerator<Mess
     if (Array.isArray(chunk) && chunk.length === 2) {
       const [chunkType, chunkData] = chunk;
 
-      if (chunkType === 'messages' || chunkType === 'messages-tuple') {
+      if (chunkType === 'messages') {
         const { message, metadata } = normalizeMessageChunk(chunkData);
         if (!message) continue;
 
@@ -59,7 +68,6 @@ async function* generator(iterable: AsyncIterable<unknown>): AsyncGenerator<Mess
         const processedMessage = processAIMessage(message as Record<string, unknown>, currentAssistantId, {
           streamedAnyToken,
         });
-
         if (processedMessage) {
           if (
             isAIMessageChunk &&
@@ -73,38 +81,38 @@ async function* generator(iterable: AsyncIterable<unknown>): AsyncGenerator<Mess
         continue;
       }
 
-      if (chunkType === 'updates' && chunkData && typeof chunkData === 'object' && !Array.isArray(chunkData)) {
-        // Handle updates: ['updates', { agent: { messages: [Array] } }]
-        if (
-          'agent' in chunkData &&
-          chunkData.agent &&
-          typeof chunkData.agent === 'object' &&
-          !Array.isArray(chunkData.agent) &&
-          'messages' in chunkData.agent
-        ) {
-          const messages = Array.isArray(chunkData.agent.messages)
-            ? chunkData.agent.messages
-            : [chunkData.agent.messages];
-          for (const message of messages) {
-            if (!message) continue;
+      // Handle updates: ['updates', { agent: { messages: [Array] } }]
+      // if (chunkType === 'updates' && chunkData && typeof chunkData === 'object' && !Array.isArray(chunkData)) {
+      //   if (
+      //     'agent' in chunkData &&
+      //     chunkData.agent &&
+      //     typeof chunkData.agent === 'object' &&
+      //     !Array.isArray(chunkData.agent) &&
+      //     'messages' in chunkData.agent
+      //   ) {
+      //     const messages = Array.isArray(chunkData.agent.messages)
+      //       ? chunkData.agent.messages
+      //       : [chunkData.agent.messages];
+      //     for (const message of messages) {
+      //       if (!message) continue;
 
-            const isAIMessage =
-              message?.constructor?.name === 'AIMessageChunk' || message?.constructor?.name === 'AIMessage';
+      //       const isAIMessage =
+      //         message?.constructor?.name === 'AIMessageChunk' || message?.constructor?.name === 'AIMessage';
 
-            if (!isAIMessage) continue;
+      //       if (!isAIMessage) continue;
 
-            const messageWithTools = message as Record<string, unknown>;
-            if (!currentAssistantId) {
-              currentAssistantId =
-                (typeof messageWithTools.id === 'string' && (messageWithTools.id as string)) || `ai-${Date.now()}`;
-            }
-            const processedMessage = processAIMessage(messageWithTools, currentAssistantId, { streamedAnyToken });
-            if (processedMessage) {
-              yield processedMessage;
-            }
-          }
-        }
-      }
+      //       const messageWithTools = message as Record<string, unknown>;
+      //       if (!currentAssistantId) {
+      //         currentAssistantId =
+      //           (typeof messageWithTools.id === 'string' && (messageWithTools.id as string)) || `ai-${Date.now()}`;
+      //       }
+      //       const processedMessage = processAIMessage(messageWithTools, currentAssistantId, { streamedAnyToken });
+      //       if (processedMessage) {
+      //         yield processedMessage;
+      //       }
+      //     }
+      //   }
+      // }
     }
   }
 }
@@ -127,7 +135,6 @@ function normalizeMessageChunk(chunkData: unknown): {
   return { message: chunkData, metadata: undefined };
 }
 
-// Helper function to process any AI message and return the appropriate MessageResponse
 function processAIMessage(
   message: Record<string, unknown>,
   fallbackId: string,
@@ -135,7 +142,7 @@ function processAIMessage(
 ): MessageResponse | null {
   const ctorName = message?.constructor?.name as string | undefined;
   if (ctorName === 'AIMessage' && ctx.streamedAnyToken) {
-    return null; // 若是 AIMessage 类型且已流式输出，则返回 null
+    return null;
   }
 
   // Check if this is a tool call (content is array with functionCall)
@@ -171,10 +178,7 @@ function processAIMessage(
     if (text.length > 0) {
       return {
         type: 'ai',
-        data: {
-          id: (message.id as string) || fallbackId,
-          content: text,
-        },
+        data: { id: (message.id as string) || fallbackId, content: text },
       };
     }
   }

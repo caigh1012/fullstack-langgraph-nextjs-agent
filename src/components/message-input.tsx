@@ -1,7 +1,6 @@
 'use client';
 
 import { ModelSelect } from '@/components/model-select';
-import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -18,19 +17,19 @@ import {
   PromptInputTools,
   usePromptInputController,
 } from '@/components/ai-elements/prompt-input';
-import { models } from '@/constants/models';
 import { GlobeIcon } from 'lucide-react';
-import { useState } from 'react';
 import { MAX_ATTACHMENTS } from '@/constants';
+import { useUISettingContext } from '@/contexts/ui-settings-context';
+import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 
 interface MessageInputProps {
-  sendMessage: (message: PromptInputMessage) => Promise<void>;
+  sendMessage: (message: MessageStreamDto) => Promise<void>;
   isSending: boolean;
 }
 
 function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
+  const { model, setModel } = useUISettingContext();
   const { textInput, attachments } = usePromptInputController();
-  const [model, setModel] = useState<string>(models[0].id);
 
   const isEmpty = textInput.value.trim() === '' && attachments.files.length === 0;
 
@@ -38,7 +37,13 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
     <PromptInput
       globalDrop
       multiple
-      onSubmit={sendMessage}>
+      onSubmit={(message) =>
+        sendMessage({
+          content: message.text,
+          model: model.id,
+          provider: model.chefSlug,
+        })
+      }>
       <PromptInputBody>
         <PromptInputTextarea placeholder="请输入..." />
       </PromptInputBody>
@@ -56,8 +61,8 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
             <span>Search</span>
           </PromptInputButton>
           <ModelSelect
-            value={model}
-            onValueChange={setModel}
+            model={model}
+            onModelChange={setModel}
           />
         </PromptInputTools>
         <PromptInputSubmit

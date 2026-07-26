@@ -40,7 +40,7 @@ import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
 export function ThreadList() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { threads, deleteThread, updateThreadTitle, refetchThreads, isLoadingThreads, threadError } = useThreads();
+  const { threads, deleteThread, updateThread, refetchThreads, isLoadingThreads } = useThreads();
   const [filter, setFilter] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false); // 删除会话弹窗状态
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -126,7 +126,7 @@ export function ThreadList() {
     setSavingRename(true);
     try {
       const nextTitle = renameValue.trim() || 'Untitled thread';
-      await updateThreadTitle(renamingId, nextTitle);
+      await updateThread(renamingId, nextTitle);
       // 刷新会话列表
       await refetchThreads();
       toast.success('会话命名成功');

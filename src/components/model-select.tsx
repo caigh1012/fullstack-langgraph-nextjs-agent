@@ -15,11 +15,12 @@ import {
 } from '@/components/ai-elements/model-selector';
 import { PromptInputButton } from '@/components/ai-elements/prompt-input';
 import { models } from '@/constants/models';
+import { SelectLLMModel } from '@/types/select-model';
 import { CheckIcon } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
 
 interface ModelItemProps {
-  m: (typeof models)[0];
+  m: SelectLLMModel;
   selectedModel: string;
   onSelect: (id: string) => void;
 }
@@ -49,21 +50,19 @@ const ModelItem = memo(({ m, selectedModel, onSelect }: ModelItemProps) => {
 ModelItem.displayName = 'ModelItem';
 
 interface ModelSelectProps {
-  value: string;
-  onValueChange: (id: string) => void;
+  model: SelectLLMModel;
+  onModelChange: (model: SelectLLMModel) => void;
 }
 
-export function ModelSelect({ value, onValueChange }: ModelSelectProps) {
+export function ModelSelect({ model, onModelChange: onModelChange }: ModelSelectProps) {
   const [open, setOpen] = useState(false);
 
-  const selectedModelData = models.find((m) => m.id === value);
-
   const handleModelSelect = useCallback(
-    (id: string) => {
-      onValueChange(id);
+    (model: SelectLLMModel) => {
+      onModelChange(model);
       setOpen(false);
     },
-    [onValueChange],
+    [onModelChange],
   );
 
   return (
@@ -72,15 +71,15 @@ export function ModelSelect({ value, onValueChange }: ModelSelectProps) {
       open={open}>
       <ModelSelectorTrigger asChild>
         <PromptInputButton>
-          {selectedModelData?.chefSlug && <ModelSelectorLogo provider={selectedModelData.chefSlug} />}
-          {selectedModelData?.name && <ModelSelectorName>{selectedModelData.name}</ModelSelectorName>}
+          {model.chefSlug && <ModelSelectorLogo provider={model.chefSlug} />}
+          {model.name && <ModelSelectorName>{model.name}</ModelSelectorName>}
         </PromptInputButton>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
         <ModelSelectorInput placeholder="Search models..." />
         <ModelSelectorList>
-          <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-          {['OpenAI', 'Anthropic', 'Google'].map((chef) => (
+          <ModelSelectorEmpty>未找到模型</ModelSelectorEmpty>
+          {['DeepSeek', 'GLM'].map((chef) => (
             <ModelSelectorGroup
               heading={chef}
               key={chef}>
@@ -90,8 +89,8 @@ export function ModelSelect({ value, onValueChange }: ModelSelectProps) {
                   <ModelItem
                     key={m.id}
                     m={m}
-                    onSelect={handleModelSelect}
-                    selectedModel={value}
+                    onSelect={() => handleModelSelect(m)}
+                    selectedModel={model.id}
                   />
                 ))}
             </ModelSelectorGroup>

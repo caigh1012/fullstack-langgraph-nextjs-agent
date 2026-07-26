@@ -1,5 +1,6 @@
 import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { HttpBusinessCode } from '@/constants/http';
+import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 import { AIMessageData, MessageResponse } from '@/types/messages';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -69,18 +70,34 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
     }
   }, [threadId, refetchMessagesQuery]);
 
+  // const stop = useCallback(() => {
+  //   if (abortControllerRef.current) {
+  //     abortControllerRef.current.abort();
+  //     abortControllerRef.current = null;
+  //   }
+  // }, []);
+
   /**
    * 发送消息
    */
   const sendMessage = useCallback(
-    async (message: PromptInputMessage) => {
+    async (message: MessageStreamDto) => {
       if (!threadId) return;
+
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
       const tempId = `temp-${Date.now()}`;
       const userMessage: MessageResponse = {
         type: 'human',
         data: {
           id: tempId,
-          content: message.text,
+          content: message.content,
         },
       };
 
@@ -95,9 +112,13 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
           headers: {
             'Content-Type': 'application/json',
           },
+          signal: abortController.signal,
           body: JSON.stringify({
             threadId,
-            content: message.text,
+            content: message.content,
+            ...(message.model && { model: message.model }),
+            ...(message.provider && { provider: message.provider }),
+            ...(message.attachments && { attachments: message.attachments }),
           }),
           onmessage: (event) => {
             if (!event.data) return;
@@ -151,10 +172,12 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
             queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [...old, errorMsg]);
             setIsSending(false);
             currentMessageRef.current = null;
+            abortControllerRef.current = null;
             throw error;
           },
           onclose: () => {
             setIsSending(false);
+            abortControllerRef.current = null;
             currentMessageRef.current = null;
           },
         });

@@ -3,20 +3,16 @@ import { ChatDeepSeek } from '@langchain/deepseek';
 import { ChatOpenAI } from '@langchain/openai';
 
 export interface CreateChatModelOptions {
-  provider?: string;
+  provider?: string; // 'deepseek' | 'anthropic'
   model: string;
   temperature?: number;
 }
 
-export function createChatModel({
-  provider = 'deepseek',
-  model,
-  temperature = 1,
-}: CreateChatModelOptions): BaseChatModel {
+export function createChatModel({ provider, model, temperature = 1 }: CreateChatModelOptions): BaseChatModel {
   switch (provider) {
-    case 'glm': {
+    case 'zai': {
       return new ChatOpenAI({
-        model: 'glm-5v-turbo',
+        model,
         apiKey: process.env.ZAI_API_KEY,
         temperature,
         configuration: { baseURL: 'https://open.bigmodel.cn/api/paas/v4/' },

@@ -2,7 +2,7 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { BaseCheckpointSaver, END, MessagesAnnotation, START, StateGraph } from '@langchain/langgraph';
 
 /**
- * Agent 构建
+ * Agent 构建器
  */
 export class AgentBuilder {
   private readonly model: BaseChatModel;
