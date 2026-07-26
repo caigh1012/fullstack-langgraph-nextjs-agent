@@ -25,3 +25,7 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+/**
+ * 更新用户信息
+ */

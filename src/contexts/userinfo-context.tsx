@@ -13,7 +13,7 @@ interface UserInfo {
   username: string;
   nickname: string;
   email?: string;
-  avatar?: string;
+  avatarUrl?: string;
   gender: string;
 }
 

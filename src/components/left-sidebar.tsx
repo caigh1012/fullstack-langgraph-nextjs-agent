@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Boxes, ChevronsUpDown, LogOut, MessageCircleCheck, Settings, UserRoundCog } from 'lucide-react';
+import { Boxes, ChevronsUpDown, LogOut, MessageCircleCheck, Settings, UserRound, UserRoundCog } from 'lucide-react';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
 import { ThreadList } from './thread-list';
 import {
@@ -26,6 +26,7 @@ import {
 } from './ui/alert-dialog';
 import { Button } from './ui/button';
 import { Spinner } from './ui/spinner';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function LeftSidebar() {
   const { state, isMobile } = useSidebar();
@@ -56,13 +57,23 @@ export function LeftSidebar() {
               <button
                 type="button"
                 className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center">
-                <Image
-                  src="/logo.svg"
-                  alt="User avatar"
-                  width={32}
-                  height={32}
-                  className="size-8 shrink-0 rounded-lg"
-                />
+                <Avatar size="lg">
+                  {userInfo?.avatarUrl && (
+                    <>
+                      <AvatarImage
+                        src={userInfo.avatarUrl}
+                        alt={userInfo.nickname || userInfo.email}
+                      />
+                      <AvatarFallback>
+                        <UserRound />
+                      </AvatarFallback>
+                    </>
+                  )}
+                  <AvatarFallback>
+                    <UserRound />
+                  </AvatarFallback>
+                </Avatar>
+
                 <div className="grid gap-1 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold">{userInfo?.nickname || '--'}</span>
                   <span className="truncate text-xs text-muted-foreground">
@@ -82,13 +93,22 @@ export function LeftSidebar() {
               <DropdownMenuLabel className="p-0 font-normal text-foreground">
                 {/* 用户个人信息 */}
                 <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
-                  <Image
-                    src="/logo.svg"
-                    alt="User avatar"
-                    width={32}
-                    height={32}
-                    className="size-8 shrink-0 rounded-lg"
-                  />
+                  <Avatar size="lg">
+                    {userInfo?.avatarUrl && (
+                      <>
+                        <AvatarImage
+                          src={userInfo.avatarUrl}
+                          alt={userInfo.nickname || userInfo.email}
+                        />
+                        <AvatarFallback>
+                          <UserRound />
+                        </AvatarFallback>
+                      </>
+                    )}
+                    <AvatarFallback>
+                      <UserRound />
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="grid flex-1 gap-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{userInfo?.nickname || '--'}</span>
                     <span className="truncate text-xs text-muted-foreground">

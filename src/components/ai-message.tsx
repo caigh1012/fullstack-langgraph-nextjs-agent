@@ -2,7 +2,7 @@
 
 import { MessageResponse } from '@/types/messages';
 import { Message, MessageContent } from './ai-elements/message';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarImage } from './ui/avatar';
 
 import { getMessageContent } from '@/utils/message';
 import rehypeKatex from 'rehype-katex';
@@ -21,9 +21,10 @@ export default function AiMessage({ message }: { message: MessageResponse }) {
   return (
     <Message from="ai">
       <div className="flex items-start gap-2">
-        <Avatar className="shrink-0">
-          <AvatarImage src="/logo.svg" />
-          <AvatarFallback>CN</AvatarFallback>
+        <Avatar
+          size="lg"
+          className="shrink-0 after:border-0">
+          <AvatarImage src="/robot.svg" />
         </Avatar>
         <MessageContent>
           {messageContent && (

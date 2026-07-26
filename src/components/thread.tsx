@@ -63,13 +63,11 @@ export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
     <div className="absolute inset-0 flex flex-col">
       {messages.length > 0 ? (
         <>
-          <div className="min-h-0 flex-1 w-full m-auto lg:w-[92%] xl:w-[85%] 2xl:w-[75%]">
-            <Conversation className="h-full">
-              <ConversationContent scrollClassName="no-scrollbar">
-                <MessageList messages={messages} />
-              </ConversationContent>
-            </Conversation>
-          </div>
+          <Conversation>
+            <ConversationContent className="w-full m-auto lg:w-[92%] xl:w-[85%] 2xl:w-[75%]">
+              <MessageList messages={messages} />
+            </ConversationContent>
+          </Conversation>
           <div className="shrink-0">
             <div className="w-full p-4 pb-6">
               <div className="mx-auto max-w-3xl">
