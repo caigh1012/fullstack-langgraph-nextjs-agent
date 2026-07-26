@@ -22,6 +22,7 @@ export interface UserInfoContextType {
   loading: boolean;
   loggingOut: boolean;
   logout: () => Promise<void>;
+  refreshUserInfo: () => void;
 }
 
 const UserInfoContext = createContext<UserInfoContextType | null>(null);
@@ -69,9 +70,16 @@ export function UserInfoProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
+  /**
+   * 刷新用户信息
+   */
+  const refreshUserInfo = useCallback(() => {
     getUserInfo();
   }, [getUserInfo]);
+
+  useEffect(() => {
+    getUserInfo();
+  }, []);
 
   const value = useMemo<UserInfoContextType>(
     () => ({
@@ -79,8 +87,9 @@ export function UserInfoProvider({ children }: { children: React.ReactNode }) {
       loading,
       loggingOut,
       logout,
+      refreshUserInfo,
     }),
-    [userInfo, loading, loggingOut, logout],
+    [userInfo, loading, loggingOut, logout, refreshUserInfo],
   );
 
   return <UserInfoContext.Provider value={value}>{children}</UserInfoContext.Provider>;

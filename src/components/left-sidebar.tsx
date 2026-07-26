@@ -27,6 +27,7 @@ import {
 import { Button } from './ui/button';
 import { Spinner } from './ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { UserProfileForm } from './user-profile-form';
 
 export function LeftSidebar() {
   const { state, isMobile } = useSidebar();
@@ -118,10 +119,17 @@ export function LeftSidebar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <UserRoundCog />
-                修改个人信息
-              </DropdownMenuItem>
+              <UserProfileForm
+                trigger={
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}>
+                    <UserRoundCog />
+                    修改个人信息
+                  </DropdownMenuItem>
+                }
+              />
               <DropdownMenuItem>
                 <Boxes />
                 自定义模型
