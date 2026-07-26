@@ -8,21 +8,20 @@ import { cjk } from '@streamdown/cjk';
 import { code } from '@streamdown/code';
 import { math } from '@streamdown/math';
 import { mermaid } from '@streamdown/mermaid';
-import type { UIMessage } from 'ai';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import type { ComponentProps, HTMLAttributes, ReactElement } from 'react';
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Streamdown } from 'streamdown';
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: UIMessage['role'];
+  from: 'human' | 'ai';
 };
 
 export const Message = ({ className, from, ...props }: MessageProps) => (
   <div
     className={cn(
       'group flex w-full max-w-[95%] flex-col gap-2',
-      from === 'user' ? 'is-user ml-auto justify-end' : 'is-assistant',
+      from === 'human' ? 'is-user ml-auto justify-end' : 'is-assistant',
       className,
     )}
     {...props}
@@ -30,14 +29,6 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
 );
 
 export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
-
-// export const MessageAvatar = ({ children, className, ...props }) => (
-//   <div
-//     className={cn('w-6 h-6', className)}
-//     {...props}>
-//     {children}
-//   </div>
-// );
 
 export const MessageContent = ({ children, className, ...props }: MessageContentProps) => (
   <div

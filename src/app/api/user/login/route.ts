@@ -12,7 +12,7 @@ import {
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { userLogin } from '@/services/user/login.service';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
-import { generateToken } from '@/utils/jwt-util';
+import { generateToken } from '@/lib/auth/jwt';
 
 const loginSchema = z.object({
   username: z

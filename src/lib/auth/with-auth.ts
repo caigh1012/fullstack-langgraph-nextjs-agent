@@ -2,9 +2,9 @@ import { TOKEN_COOKIE_KEY } from '@/constants';
 import { HttpCode } from '@/constants/http';
 import { HttpBusinessCode, HttpMessage } from '@/constants/http';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
-import { verifyToken } from '@/utils/jwt-util';
 import { JsonWebTokenError, JwtPayload, TokenExpiredError } from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from './jwt';
 
 export const withAuth = async (
   req: NextRequest,

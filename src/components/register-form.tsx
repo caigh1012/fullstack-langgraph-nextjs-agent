@@ -2,8 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { HttpBusinessCode, HttpMessage } from '@/constants/http';
-import type { ResultVO } from '@/pojo/vo/common/result.vo';
+import { HttpBusinessCode } from '@/constants/http';
 import { AtSign, LoaderCircle, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
@@ -17,18 +16,14 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   EMAIL_REGEX,
+  GENDER_OPTIONS,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   USERNAME_MIN_LENGTH,
 } from '@/constants';
 import { cn } from '@/lib/utils';
-
-const genderOptions = [
-  { label: '男', value: 'MALE' },
-  { label: '女', value: 'FEMALE' },
-  { label: '保密', value: 'UNKNOWN' },
-] as const;
+import { useCallback } from 'react';
 
 const registerFormSchema = z.object({
   username: z
@@ -49,40 +44,42 @@ const registerFormSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerFormSchema>;
 
-async function registerRequest(values: RegisterFormValues) {
-  const response = await fetch('/api/user/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'same-origin',
-    body: JSON.stringify({
-      ...values,
-      email: values.email || undefined,
-    }),
-  });
-
-  let result: ResultVO<null>;
-
-  try {
-    result = (await response.json()) as ResultVO<null>;
-  } catch {
-    throw new Error(response.ok ? HttpMessage.INTERNAL_SERVER_ERROR : HttpMessage.REQUEST_FAILED);
-  }
-
-  if (!response.ok || result.code !== HttpBusinessCode.SUCCESS) {
-    throw new Error(result.message || HttpMessage.REQUEST_FAILED);
-  }
-
-  return result;
-}
-
 export default function RegisterForm() {
   const router = useRouter();
+
+  const registerFun = useCallback(async (values: RegisterFormValues) => {
+    const response = await fetch('/api/user/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        ...values,
+        email: values.email || undefined,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to register';
+      const errorBody = await response.json();
+      errorMessage = errorBody.message || errorBody.error || errorMessage;
+      throw new Error(errorMessage);
+    }
+    const data = await response.json();
+    if (data.code === HttpBusinessCode.FAIL) {
+      throw new Error(data.message || '注册失败');
+    }
+    return data;
+  }, []);
+
   const registerMutation = useMutation({
-    mutationFn: registerRequest,
+    mutationFn: registerFun,
+    onSuccess: () => {
+      toast.success('注册成功');
+    },
     onError: (error) => {
-      toast.error(error.message, {});
+      toast.error(error.message);
     },
   });
 
@@ -185,7 +182,7 @@ export default function RegisterForm() {
                   value={field.value}
                   onValueChange={field.onChange}
                   className="grid gap-2 sm:grid-cols-3">
-                  {genderOptions.map((option) => (
+                  {GENDER_OPTIONS.map((option) => (
                     <label
                       key={option.value}
                       className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-background/80 px-3 py-2 text-sm transition-colors hover:border-primary/50">

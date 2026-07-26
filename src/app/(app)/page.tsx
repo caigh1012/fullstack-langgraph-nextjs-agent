@@ -9,30 +9,20 @@ import { useCallback } from 'react';
 export default function App() {
   const { createThread, refetchThreads } = useThreads();
   const router = useRouter();
-  const threadId = nanoid(36);
 
   const firstMessageSent = useCallback(
     async (content: string) => {
       try {
-        await createThread(threadId, content.slice(0, 12));
-        // 暂时使用 refetchThreads 刷新会话列表
-        refetchThreads();
-        // setFirstMessage(content);
+        const threadId = nanoid(36);
+        await createThread(threadId, content);
+        // todo：待优化
+        await refetchThreads();
         router.replace(`/thread/${threadId}`);
       } finally {
       }
     },
-    [threadId, createThread, router, refetchThreads],
+    [createThread, refetchThreads, router],
   );
 
-  return (
-    <>
-      {threadId && (
-        <Thread
-          threadId={threadId}
-          onFirstMessageSent={firstMessageSent}
-        />
-      )}
-    </>
-  );
+  return <Thread onFirstMessageSent={firstMessageSent} />;
 }

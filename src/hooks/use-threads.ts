@@ -1,18 +1,11 @@
 import { HttpBusinessCode } from '@/constants/http';
-import { getUrl } from '@/utils/get-fetch-url';
+import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
-export interface Thread {
-  id: string;
-  title?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface UseThreadsReturn {
-  threads: Thread[];
+  threads: ThreadVO[];
   isLoadingThreads: boolean;
   threadError: Error | null;
   updateThreadTitle: (threadId: string, title: string) => Promise<void>;
@@ -27,7 +20,7 @@ export interface UseThreadsReturn {
 export function useThreads(): UseThreadsReturn {
   // 获取 Thread 列表
   const fetchThreads = useCallback(async () => {
-    const response = await fetch(getUrl('threads'), {
+    const response = await fetch('/api/agent/threads', {
       method: 'GET',
     });
     if (!response.ok) {
@@ -47,9 +40,9 @@ export function useThreads(): UseThreadsReturn {
 
   // 添加 Thread
   const createThread = useCallback(async (threadId: string, title?: string): Promise<void> => {
-    const response = await fetch(getUrl('threads'), {
+    const response = await fetch('/api/agent/threads', {
       method: 'POST',
-      body: JSON.stringify({ threadId, title: title?.slice(0, 12) || 'New thread' }),
+      body: JSON.stringify({ threadId, title: title?.substring(0, 100) || '新会话' }),
     });
     if (!response.ok) {
       let errorMessage = 'Failed to load threads';
@@ -60,14 +53,14 @@ export function useThreads(): UseThreadsReturn {
     }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || 'Failed to create thread');
-      throw new Error(data.message || 'Failed to create thread');
+      toast.error(data.message || '创建会话失败');
+      throw new Error(data.message || '创建会话失败');
     }
   }, []);
 
   // 修改 Thread 标题
   const updateThreadTitle = useCallback(async (threadId: string, title: string): Promise<void> => {
-    const response = await fetch(getUrl('threads'), {
+    const response = await fetch('/api/agent/threads', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -75,7 +68,7 @@ export function useThreads(): UseThreadsReturn {
       body: JSON.stringify({ threadId, title }),
     });
     if (!response.ok) {
-      let errorMessage = 'Failed to update thread title';
+      let errorMessage = '修改会话失败';
       const errorBody = await response.json();
       errorMessage = errorBody.message || errorBody.error || errorMessage;
       toast.error(errorMessage);
@@ -83,14 +76,14 @@ export function useThreads(): UseThreadsReturn {
     }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || 'Failed to update thread title');
-      throw new Error(data.message || 'Failed to update thread title');
+      toast.error(data.message || '修改会话失败');
+      throw new Error(data.message || '修改会话失败');
     }
   }, []);
 
   // 删除 Thread
   const deleteThread = useCallback(async (threadId: string): Promise<void> => {
-    const response = await fetch(getUrl('threads'), {
+    const response = await fetch('/api/agent/threads', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -98,7 +91,7 @@ export function useThreads(): UseThreadsReturn {
       body: JSON.stringify({ threadId }),
     });
     if (!response.ok) {
-      let errorMessage = 'Failed to delete thread';
+      let errorMessage = '删除会话失败';
       const errorBody = await response.json();
       errorMessage = errorBody.message || errorBody.error || errorMessage;
       toast.error(errorMessage);
@@ -106,8 +99,8 @@ export function useThreads(): UseThreadsReturn {
     }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || 'Failed to delete thread');
-      throw new Error(data.message || 'Failed to delete thread');
+      toast.error(data.message || '删除会话失败');
+      throw new Error(data.message || '删除会话失败');
     }
   }, []);
 
@@ -119,7 +112,7 @@ export function useThreads(): UseThreadsReturn {
     isLoading: isLoadingThreads,
     error: threadError,
     refetch: refetchThreadsQuery,
-  } = useQuery<Thread[]>({
+  } = useQuery<ThreadVO[]>({
     queryKey: ['threads'],
     queryFn: () => fetchThreads(),
   });

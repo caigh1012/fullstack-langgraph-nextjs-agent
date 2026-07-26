@@ -1,6 +1,7 @@
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
 import { createThread, getThreadList, updateThread, deleteThread } from '@/services/thread/thread.service';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -20,8 +21,15 @@ export async function GET(req: NextRequest) {
 
       const threads = await getThreadList(userId);
 
-      return NextResponse.json<ResultVO<typeof threads>>(
-        { data: threads, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
+      const threadVOs = threads.map((thread) => ({
+        id: thread.id,
+        title: thread.title,
+        createdAt: thread.createdAt.toISOString(),
+        updatedAt: thread.updatedAt.toISOString(),
+      }));
+
+      return NextResponse.json<ResultVO<ThreadVO[]>>(
+        { data: threadVOs, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
@@ -34,7 +42,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-const threadCreateOrUpdateSchema = z.object({
+const threadCreateSchema = z.object({
   threadId: z.string(),
   title: z.string(),
 });
@@ -50,7 +58,7 @@ export async function POST(req: NextRequest) {
       const userId = payload.sub as string;
 
       const body = await _req.json();
-      const result = threadCreateOrUpdateSchema.safeParse(body);
+      const result = threadCreateSchema.safeParse(body);
 
       if (!result.success) {
         return NextResponse.json<ResultVO<null>>(
@@ -77,6 +85,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
+const threadUpdateSchema = z.object({
+  threadId: z.string(),
+  title: z.string(),
+});
+
 /**
  * 更新 Thread
  * @param req
@@ -88,7 +101,7 @@ export async function PATCH(req: NextRequest) {
       const userId = payload.sub as string;
 
       const body = await _req.json();
-      const result = threadCreateOrUpdateSchema.safeParse(body);
+      const result = threadUpdateSchema.safeParse(body);
 
       if (!result.success) {
         return NextResponse.json<ResultVO<null>>(

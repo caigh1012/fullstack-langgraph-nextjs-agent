@@ -2,7 +2,6 @@ import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
 import { fetchThreadHistory } from '@/services/message/message.service';
-import { MessageResponse } from '@/types/messages';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -21,16 +20,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ thre
       const { threadId } = await params;
 
       const messages = await fetchThreadHistory(userId, threadId);
-      const messageList: MessageResponse[] = messages.map((item) => {
-        return {
-          id: item.data.id || '',
-          type: item.type,
-          role: item.type === 'human' ? 'user' : 'assistant',
-          data: item.data,
-        };
-      });
-      return NextResponse.json<ResultVO<MessageResponse[]>>(
-        { data: messageList, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
+
+      return NextResponse.json<ResultVO<typeof messages>>(
+        { data: messages, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });

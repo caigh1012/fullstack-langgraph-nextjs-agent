@@ -5,19 +5,19 @@ import { MessageResponse } from '@/types/messages';
 export default function MessageList({ messages }: { messages: MessageResponse[] }) {
   return (
     <>
-      {messages.map(({ id, data, role }) => (
+      {messages.map(({ type, data }) => (
         <Message
-          from={role}
-          key={id}>
+          from={type as 'human' | 'ai'}
+          key={data?.id || ''}>
           <div className="flex items-start gap-2">
-            {role === 'assistant' && (
+            {type === 'ai' && (
               <Avatar className="shrink-0">
                 <AvatarImage src="/logo.svg" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
             )}
             <MessageContent>{data.content || ''}</MessageContent>
-            {role === 'user' && (
+            {type === 'human' && (
               <Avatar className="shrink-0">
                 <AvatarImage src="https://github.com/shadcn.png" />
                 <AvatarFallback>CN</AvatarFallback>

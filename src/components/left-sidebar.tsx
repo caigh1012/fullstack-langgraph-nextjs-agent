@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { ChevronsUpDown, LogOut, MessageCircleCheck, Settings, Sparkles } from 'lucide-react';
+import { Boxes, ChevronsUpDown, LogOut, MessageCircleCheck, Settings, UserRoundCog } from 'lucide-react';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
 import { ThreadList } from './thread-list';
 import {
@@ -25,14 +25,11 @@ import {
   AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { Button } from './ui/button';
+import { Spinner } from './ui/spinner';
 
 export function LeftSidebar() {
   const { state, isMobile } = useSidebar();
   const { userInfo, loggingOut, logout } = useUserInfoContext();
-
-  const handleLogout = async () => {
-    await logout();
-  };
 
   return (
     <Sidebar>
@@ -66,9 +63,11 @@ export function LeftSidebar() {
                   height={32}
                   className="size-8 shrink-0 rounded-lg"
                 />
-                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                <div className="grid gap-1 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold">{userInfo?.nickname || '--'}</span>
-                  <span className="truncate text-xs text-muted-foreground">{userInfo?.email || '--'}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {userInfo?.email || 'example@example.com'}
+                  </span>
                 </div>
                 <ChevronsUpDown className="ml-auto size-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
               </button>
@@ -90,27 +89,32 @@ export function LeftSidebar() {
                     height={32}
                     className="size-8 shrink-0 rounded-lg"
                   />
-                  <div className="grid flex-1 text-left text-sm leading-tight">
+                  <div className="grid flex-1 gap-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{userInfo?.nickname || '--'}</span>
-                    <span className="truncate text-xs text-muted-foreground">{userInfo?.email || '--'}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {userInfo?.email || 'example@example.com'}
+                    </span>
                   </div>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Sparkles />
+                <UserRoundCog />
                 修改个人信息
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Boxes />
+                自定义模型
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Settings className="h-4 w-4" />
                 MCP配置
               </DropdownMenuItem>
               <AlertDialogTrigger asChild>
-                <DropdownMenuItem disabled={loggingOut}>
+                <DropdownMenuItem>
                   <LogOut />
-                  {loggingOut ? '退出中...' : '退出'}
+                  退出
                 </DropdownMenuItem>
-                {/* <Button variant="outline">Show Dialog</Button> */}
               </AlertDialogTrigger>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -128,7 +132,12 @@ export function LeftSidebar() {
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction asChild>
-              <Button onClick={logout}>确认退出</Button>
+              <Button
+                disabled={loggingOut}
+                onClick={logout}>
+                {loggingOut ? <Spinner data-icon="inline-start" /> : null}
+                确认退出
+              </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

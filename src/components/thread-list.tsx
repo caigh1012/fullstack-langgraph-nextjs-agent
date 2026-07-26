@@ -13,8 +13,9 @@ import {
   SidebarMenuItem,
 } from './ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
+import { formatDateTime } from '@/utils/date-format';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Thread, useThreads } from '@/hooks/use-threads';
+import { useThreads } from '@/hooks/use-threads';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Input } from './ui/input';
 import {
@@ -30,6 +31,8 @@ import {
 } from './ui/alert-dialog';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { Spinner } from './ui/spinner';
+import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
 
 /**
  * 会话列表组件
@@ -41,11 +44,13 @@ export function ThreadList() {
   const [filter, setFilter] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false); // 删除会话弹窗状态
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false); /// 正在删除状态
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
   /// 正在保存命名状态
   const [savingRename, setSavingRename] = useState(false);
+
   const [refreshing, setRefreshing] = useState(false); // 刷新状态管理
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pathname = usePathname();
@@ -74,9 +79,10 @@ export function ThreadList() {
     if (!pendingDeleteId) {
       return;
     }
+    setDeleting(true);
     try {
       await deleteThread(pendingDeleteId);
-      queryClient.setQueryData(['threads'], (old: Thread[] = []) =>
+      queryClient.setQueryData(['threads'], (old: ThreadVO[] = []) =>
         old.filter((thread) => thread.id !== pendingDeleteId),
       );
       queryClient.removeQueries({ queryKey: ['messages', pendingDeleteId] });
@@ -84,6 +90,7 @@ export function ThreadList() {
       // 删除后，重定向到会话列表页
       router.replace('/');
     } finally {
+      setDeleting(false);
       setPendingDeleteId(null);
       setDeleteModalOpen(false);
     }
@@ -219,9 +226,7 @@ export function ThreadList() {
                                   {thread.title || `Thread ${thread.id.slice(0, 8)}`}
                                 </div>
                                 <div className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                                  <div className="shrink-0 tabular-nums">
-                                    {new Date(thread.createdAt).toLocaleDateString()}
-                                  </div>
+                                  <div className="shrink-0 tabular-nums">{formatDateTime(thread.createdAt)}</div>
                                 </div>
                               </div>
                             </SidebarMenuButton>
@@ -304,7 +309,12 @@ export function ThreadList() {
                 <Button onClick={() => setDeleteModalOpen(false)}>取消</Button>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
-                <Button onClick={() => confirmDeleteThread()}>确认</Button>
+                <Button
+                  disabled={deleting}
+                  onClick={() => confirmDeleteThread()}>
+                  {deleting ? <Spinner data-icon="inline-start" /> : null}
+                  确认
+                </Button>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

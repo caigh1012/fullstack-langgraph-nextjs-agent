@@ -1,8 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { HttpBusinessCode, HttpMessage } from '@/constants/http';
-import type { ResultVO } from '@/pojo/vo/common/result.vo';
+import { HttpBusinessCode } from '@/constants/http';
 import { LoaderCircle, LockKeyhole, ShieldCheck, UserRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -16,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from '@/constants';
 import { cn } from '@/lib/utils';
+import { useCallback } from 'react';
 
 const loginFormSchema = z.object({
   username: z
@@ -31,34 +31,35 @@ const loginFormSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-async function loginRequest(values: LoginFormValues) {
-  const response = await fetch('/api/user/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(values),
-  });
-
-  let result: ResultVO<null>;
-
-  try {
-    result = (await response.json()) as ResultVO<null>;
-  } catch {
-    throw new Error(response.ok ? HttpMessage.INTERNAL_SERVER_ERROR : HttpMessage.REQUEST_FAILED);
-  }
-
-  if (!response.ok || result.code !== HttpBusinessCode.SUCCESS) {
-    throw new Error(result.message || HttpMessage.REQUEST_FAILED);
-  }
-
-  return result;
-}
-
 export default function LoginForm() {
   const router = useRouter();
+
+  const login = useCallback(async (values: LoginFormValues) => {
+    const response = await fetch('/api/user/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(values),
+    });
+    if (!response.ok) {
+      let errorMessage = 'Failed to login';
+      const errorBody = await response.json();
+      errorMessage = errorBody.message || errorBody.error || errorMessage;
+      throw new Error(errorMessage);
+    }
+    const data = await response.json();
+    if (data.code === HttpBusinessCode.FAIL) {
+      throw new Error(data.message || '登录失败');
+    }
+    return data;
+  }, []);
+
   const loginMutation = useMutation({
-    mutationFn: loginRequest,
+    mutationFn: login,
+    onSuccess: () => {
+      toast.success('登录成功');
+    },
     onError: (error) => {
       toast.error(error.message);
     },

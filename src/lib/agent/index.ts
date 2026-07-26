@@ -1,6 +1,6 @@
 import { AgentBuilder } from './builder';
 import { postgresCheckpointer } from './memory';
-import { createChatModel } from './utils';
+import { createChatModel } from './models';
 
 let setupPromise: Promise<void> | null = null;
 

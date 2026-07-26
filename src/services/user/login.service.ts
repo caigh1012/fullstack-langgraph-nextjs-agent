@@ -9,6 +9,9 @@ const USER_ID_RETRY_LIMIT = 3;
 const NICKNAME_PREFIX = 'user_';
 const NICKNAME_RANDOM_LENGTH = NICKNAME_LENGTH - NICKNAME_PREFIX.length;
 
+/**
+ * 创建唯一的用户ID
+ */
 async function createUniqueUserId() {
   for (let attempt = 0; attempt < USER_ID_RETRY_LIMIT; attempt += 1) {
     const id = nanoid();
@@ -29,6 +32,9 @@ async function createUniqueUserId() {
   throw new Error('Failed to generate a unique user id.');
 }
 
+/**
+ * 创建自动生成昵称
+ */
 function createNickname() {
   return `${NICKNAME_PREFIX}${nanoid(NICKNAME_RANDOM_LENGTH)}`;
 }

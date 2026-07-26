@@ -1,6 +1,5 @@
 'use client';
 
-import { ThreadProvider } from '@/contexts/thread-context';
 import { UserInfoProvider } from '@/contexts/userinfo-context';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -9,6 +8,7 @@ import { SvgIcon } from '@/components/svg-icon';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { LeftSidebar } from '@/components/left-sidebar';
+import { FirstMessageProvider } from '@/contexts/first-message-context';
 /**
  * 用户登录后的布局
  */
@@ -19,7 +19,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <UserInfoProvider>
       <TooltipProvider>
-        <ThreadProvider>
+        <FirstMessageProvider>
           <SidebarProvider>
             {/* 左边侧边栏 */}
             <LeftSidebar />
@@ -65,7 +65,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className="relative h-[calc(100vh-3rem)] flex-1">{children}</div>
             </main>
           </SidebarProvider>
-        </ThreadProvider>
+        </FirstMessageProvider>
       </TooltipProvider>
     </UserInfoProvider>
   );

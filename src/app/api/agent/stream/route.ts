@@ -1,6 +1,6 @@
+import { streamResponse } from '@/lib/agent/utils';
 import { withAuth } from '@/lib/auth/with-auth';
 import { MessageResponse } from '@/types/messages';
-import { streamResponse } from '@/utils/agent-stream';
 import { getThreadId } from '@/utils/get-thread-id';
 import { NextRequest } from 'next/server';
 
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return await withAuth(req, async (_req, payload) => {
       const userId = payload.sub as string;
       const body = await _req.json();
-      const { threadId, content: userContent, model, provider } = body;
+      const { threadId, content: userContent } = body;
 
       const encoder = new TextEncoder();
       const stream = new ReadableStream<Uint8Array>({
@@ -32,7 +32,6 @@ export async function POST(req: NextRequest) {
               const iterable = await streamResponse({
                 threadId: getThreadId(userId, threadId),
                 userText: userContent,
-                opts: { model, provider },
               });
 
               for await (const chunk of iterable) {

@@ -9,17 +9,21 @@ import { getThreadId } from '@/utils/get-thread-id';
  * 获取 Threade 消息历史
  */
 export async function fetchThreadHistory(userId: string, threadId: string) {
-  // 先查找 thread 是否存在，若不存在则返回空数组
-  const thread = await prisma.thread.findFirst({ where: { id: threadId, userId } });
-  if (!thread) return [];
   try {
+    // 先查找 thread 是否存在，若不存在则返回空数组
+    const thread = await prisma.thread.findFirst({ where: { id: threadId, userId } });
+    if (!thread) return [];
+
+    // 从数据库中获取消息历史
     const history = await postgresCheckpointer.get({
       configurable: { thread_id: getThreadId(userId, threadId) },
     });
 
-    const messages = Array.isArray(history?.channel_values?.messages) ? history.channel_values.messages : [];
+    const messages: BaseMessage[] = Array.isArray(history?.channel_values?.messages)
+      ? history.channel_values.messages
+      : [];
 
-    return messages.map((msg: BaseMessage) => ({
+    return messages.map((msg) => ({
       ...msg.toDict(),
     }));
   } catch (error) {

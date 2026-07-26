@@ -27,3 +27,14 @@ export const NICKNAME_LENGTH = 12;
  * 邮箱正则表达式
  */
 export const EMAIL_REGEX = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/;
+
+/**
+ * 消息最大输入文件
+ */
+export const MAX_ATTACHMENTS = 5;
+
+export const GENDER_OPTIONS = [
+  { label: '男', value: 'MALE' },
+  { label: '女', value: 'FEMALE' },
+  { label: '保密', value: 'UNKNOWN' },
+] as const;

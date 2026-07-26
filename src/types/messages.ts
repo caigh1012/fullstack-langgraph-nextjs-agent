@@ -1,3 +1,11 @@
+/**
+ * MessageResponse 消息响应体
+ */
+export interface MessageResponse {
+  type: 'human' | 'ai' | 'tool' | 'error' | 'system';
+  data: BasicMessageData | AIMessageData;
+}
+
 export interface FileAttachment {
   url: string;
   key: string;
@@ -33,24 +41,19 @@ export interface ToolCall {
 }
 
 export interface BasicMessageData {
+  id: string;
   content: string;
   attachments?: FileAttachment[];
 }
 
 export interface AIMessageData {
+  id: string;
   content: string;
   tool_calls?: ToolCall[];
   tool_call_chunks?: ToolCallChunk[];
   additional_kwargs?: Record<string, unknown>;
   invalid_tool_calls?: unknown[];
   response_metadata?: Record<string, unknown>;
-}
-
-export interface MessageResponse {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  type: string;
-  data: BasicMessageData | AIMessageData;
 }
 
 export interface MessageOptions {

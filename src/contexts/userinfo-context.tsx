@@ -2,7 +2,6 @@
 
 import { HttpBusinessCode } from '@/constants/http';
 import { redirect } from 'next/navigation';
-import { useRouter } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -18,17 +17,17 @@ interface UserInfo {
   gender: string;
 }
 
-interface UserContextValue {
+export interface UserInfoContextType {
   userInfo: UserInfo | null;
   loading: boolean;
   loggingOut: boolean;
   logout: () => Promise<void>;
 }
 
-const UserInfoContext = createContext<UserContextValue | null>(null);
+const UserInfoContext = createContext<UserInfoContextType | null>(null);
 
 /**
- * 用户登录信息
+ * 用户登录信息存储
  * @returns
  */
 export function UserInfoProvider({ children }: { children: React.ReactNode }) {
@@ -36,6 +35,9 @@ export function UserInfoProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  /**
+   * 获取用户信息
+   */
   const getUserInfo = useCallback(async () => {
     setLoading(true);
     const response = await fetch('/api/user', { method: 'GET' });
@@ -49,6 +51,9 @@ export function UserInfoProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  /**
+   * 退出登录
+   */
   const logout = useCallback(async () => {
     setLoggingOut(true);
     const response = await fetch('/api/user/logout', { method: 'POST' });
@@ -68,7 +73,7 @@ export function UserInfoProvider({ children }: { children: React.ReactNode }) {
     getUserInfo();
   }, [getUserInfo]);
 
-  const value = useMemo<UserContextValue>(
+  const value = useMemo<UserInfoContextType>(
     () => ({
       userInfo,
       loading,
