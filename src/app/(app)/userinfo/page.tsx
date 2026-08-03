@@ -1,22 +1,24 @@
 'use client';
 
+import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { HttpBusinessCode } from '@/constants/http';
-import { AtSign, UserRound } from 'lucide-react';
-import { Controller, useForm } from 'react-hook-form';
+import { AtSign, Trash2, Upload, UserRound } from 'lucide-react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { EMAIL_REGEX, GENDER_OPTIONS } from '@/constants';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
+import { useLocation } from 'react-use';
 
 const userProfileFormSchema = z.object({
   nickname: z.string().trim().min(1, '昵称不能为空').max(12, '昵称长度不能超过12位'),
@@ -25,29 +27,29 @@ const userProfileFormSchema = z.object({
     .trim()
     .refine((value) => value === '' || EMAIL_REGEX.test(value), '请输入有效邮箱'),
   gender: z.enum(['MALE', 'FEMALE', 'UNKNOWN']),
+  avatarUrl: z.string(),
 });
 
 type UserProfileFormValues = z.infer<typeof userProfileFormSchema>;
 
-interface UserProfileFormProps {
-  trigger?: React.ReactNode;
-}
+export default function UserInfoPage() {
+  const { protocol } = useLocation();
 
-export function UserProfileForm({ trigger }: UserProfileFormProps) {
-  const [open, setOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { userInfo, refreshUserInfo } = useUserInfoContext();
 
   const updateUserFun = async (values: UserProfileFormValues) => {
     const response = await fetch('/api/user', {
       method: 'PUT',
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'same-origin',
       body: JSON.stringify({
         nickname: values.nickname,
         email: values.email || undefined,
         gender: values.gender,
+        avatarUrl: values.avatarUrl || undefined,
       }),
     });
 
@@ -68,7 +70,40 @@ export function UserProfileForm({ trigger }: UserProfileFormProps) {
     onSuccess: () => {
       toast.success('更新用户信息成功');
       refreshUserInfo();
-      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const uploadAvatarFun = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/user/upload', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let errorMessage = '上传头像失败';
+      const errorBody = await response.json();
+      errorMessage = errorBody.message || errorBody.error || errorMessage;
+      throw new Error(errorMessage);
+    }
+    const data = await response.json();
+    if (data.code === HttpBusinessCode.FAIL) {
+      throw new Error(data.message || '上传头像失败');
+    }
+    return data.data.url as string;
+  };
+
+  const uploadMutation = useMutation({
+    mutationFn: uploadAvatarFun,
+    onSuccess: (url) => {
+      setValue('avatarUrl', url, { shouldDirty: true });
+      toast.success('上传头像成功');
     },
     onError: (error) => {
       toast.error(error.message);
@@ -79,6 +114,7 @@ export function UserProfileForm({ trigger }: UserProfileFormProps) {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<UserProfileFormValues>({
     resolver: zodResolver(userProfileFormSchema),
@@ -86,37 +122,51 @@ export function UserProfileForm({ trigger }: UserProfileFormProps) {
       nickname: userInfo?.nickname || '',
       email: userInfo?.email || '',
       gender: (userInfo?.gender as 'MALE' | 'FEMALE' | 'UNKNOWN') || 'UNKNOWN',
+      avatarUrl: userInfo?.avatarUrl || '',
     },
     mode: 'onBlur',
   });
+
+  useEffect(() => {
+    reset({
+      nickname: userInfo?.nickname || '',
+      email: userInfo?.email || '',
+      gender: (userInfo?.gender as 'MALE' | 'FEMALE' | 'UNKNOWN') || 'UNKNOWN',
+      avatarUrl: userInfo?.avatarUrl || '',
+    });
+  }, [userInfo, reset]);
+
+  const avatarUrl = useWatch({ control, name: 'avatarUrl' });
+
+  const resetAvatar = () => {
+    setValue('avatarUrl', '', { shouldDirty: true });
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (!file) {
+      return;
+    }
+    uploadMutation.mutate(file);
+  };
 
   const onSubmit = async (values: UserProfileFormValues) => {
     await updateMutation.mutateAsync(values);
   };
 
-  const handleOpenChange = (open: boolean) => {
-    setOpen(open);
-    if (open) {
-      reset({
-        nickname: userInfo?.nickname || '',
-        email: userInfo?.email || '',
-        gender: (userInfo?.gender as 'MALE' | 'FEMALE' | 'UNKNOWN') || 'UNKNOWN',
-      });
-    }
-  };
-
   return (
-    <Dialog
-      open={open}
-      onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-106.25">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-4">
+      <div className="w-full max-w-md space-y-5">
+        <div className="flex items-center gap-2">
+          <h1 className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight">
             <UserRound className="size-4" />
             修改个人信息
-          </DialogTitle>
-        </DialogHeader>
+          </h1>
+        </div>
+
         <form
           className="space-y-5"
           onSubmit={handleSubmit(onSubmit)}>
@@ -189,11 +239,76 @@ export function UserProfileForm({ trigger }: UserProfileFormProps) {
             {errors.gender ? <p className="text-xs text-destructive">{errors.gender.message}</p> : null}
           </div>
 
+          <div className="space-y-3">
+            <Label>头像</Label>
+            <div className="flex flex-col items-center gap-3">
+              <Avatar className="size-24">
+                {avatarUrl ? (
+                  <AvatarImage
+                    src={`${protocol}//${avatarUrl}`}
+                    alt="avatar"
+                  />
+                ) : null}
+                <AvatarFallback>
+                  <UserRound className="size-12 text-muted-foreground" />
+                </AvatarFallback>
+              </Avatar>
+              <input
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                type="file"
+                onChange={handleAvatarChange}
+              />
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  className="cursor-pointer"
+                  disabled={!avatarUrl}
+                  onClick={resetAvatar}
+                  type="button"
+                  variant="outline">
+                  <Trash2 data-icon="inline-start" />
+                  删除头像
+                </Button>
+                <Button
+                  className="cursor-pointer"
+                  disabled={uploadMutation.isPending}
+                  onClick={() => fileInputRef.current?.click()}
+                  type="button"
+                  variant="outline">
+                  {uploadMutation.isPending ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      上传中...
+                    </>
+                  ) : (
+                    <>
+                      <Upload data-icon="inline-start" />
+                      更换头像
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2">
             <Button
               type="button"
+              variant="outline">
+              <Link href="/">返回</Link>
+            </Button>
+            <Button
+              type="button"
               variant="outline"
-              onClick={() => reset({ nickname: '', email: '', gender: 'UNKNOWN' })}>
+              onClick={() =>
+                reset({
+                  nickname: userInfo?.nickname || '',
+                  email: userInfo?.email || '',
+                  gender: (userInfo?.gender as 'MALE' | 'FEMALE' | 'UNKNOWN') || 'UNKNOWN',
+                  avatarUrl: userInfo?.avatarUrl || '',
+                })
+              }>
               重置
             </Button>
             <Button
@@ -211,7 +326,7 @@ export function UserProfileForm({ trigger }: UserProfileFormProps) {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

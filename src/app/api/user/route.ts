@@ -48,6 +48,7 @@ export async function PUT(req: NextRequest) {
       const body = await req.json();
 
       const parsed = updateUserSchema.safeParse(body);
+
       if (!parsed.success) {
         return NextResponse.json<ResultVO<null>>(
           {
@@ -63,6 +64,8 @@ export async function PUT(req: NextRequest) {
         id: sub as string,
         username,
         ...parsed.data,
+        avatarUrl: body.avatarUrl || null,
+        gender: body.gender || 'UNKNOWN',
       });
 
       return NextResponse.json(

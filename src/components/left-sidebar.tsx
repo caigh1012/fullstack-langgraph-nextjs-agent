@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, useSidebar } from './ui/sidebar';
 import {
   DropdownMenu,
@@ -27,9 +28,10 @@ import {
 import { Button } from './ui/button';
 import { Spinner } from './ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { UserProfileForm } from './user-profile-form';
+import { useLocation } from 'react-use';
 
 export function LeftSidebar() {
+  const { protocol } = useLocation();
   const { state, isMobile } = useSidebar();
   const { userInfo, loggingOut, logout } = useUserInfoContext();
 
@@ -60,15 +62,10 @@ export function LeftSidebar() {
                 className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center">
                 <Avatar size="lg">
                   {userInfo?.avatarUrl && (
-                    <>
-                      <AvatarImage
-                        src={userInfo.avatarUrl}
-                        alt={userInfo.nickname || userInfo.email}
-                      />
-                      <AvatarFallback>
-                        <UserRound />
-                      </AvatarFallback>
-                    </>
+                    <AvatarImage
+                      src={`${protocol}//${userInfo.avatarUrl}`}
+                      alt={userInfo.nickname || userInfo.email}
+                    />
                   )}
                   <AvatarFallback>
                     <UserRound />
@@ -96,15 +93,10 @@ export function LeftSidebar() {
                 <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
                   <Avatar size="lg">
                     {userInfo?.avatarUrl && (
-                      <>
-                        <AvatarImage
-                          src={userInfo.avatarUrl}
-                          alt={userInfo.nickname || userInfo.email}
-                        />
-                        <AvatarFallback>
-                          <UserRound />
-                        </AvatarFallback>
-                      </>
+                      <AvatarImage
+                        src={`${protocol}//${userInfo.avatarUrl}`}
+                        alt={userInfo.nickname || userInfo.email}
+                      />
                     )}
                     <AvatarFallback>
                       <UserRound />
@@ -119,17 +111,12 @@ export function LeftSidebar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <UserProfileForm
-                trigger={
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
-                    }}>
-                    <UserRoundCog />
-                    修改个人信息
-                  </DropdownMenuItem>
-                }
-              />
+              <DropdownMenuItem asChild>
+                <Link href="/userinfo">
+                  <UserRoundCog />
+                  修改个人信息
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Boxes />
                 自定义模型
