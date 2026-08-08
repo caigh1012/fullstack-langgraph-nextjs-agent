@@ -1,4 +1,4 @@
-import { MessageResponse } from '@/types/messages';
+import { AIMessageData, MessageResponse } from '@/types/messages';
 
 export function getMessageContent(message: MessageResponse): string {
   if (typeof message.data?.content === 'string') {
@@ -32,4 +32,16 @@ export function getMessageContent(message: MessageResponse): string {
     return textParts.join('');
   }
   return '';
+}
+
+/**
+ * 从 AI 消息的 additional_kwargs 中提取推理（Reasoning）内容
+ * 兼容 reasoning_content / reasoning / thoughts 等常见字段
+ */
+export function getMessageReasoning(message: MessageResponse): string {
+  const data = message.data as AIMessageData | undefined;
+  const additional = data?.additional_kwargs;
+  if (!additional || typeof additional !== 'object') return '';
+  const candidate = additional.reasoning_content ?? additional.reasoning ?? additional.thoughts;
+  return typeof candidate === 'string' ? candidate : '';
 }

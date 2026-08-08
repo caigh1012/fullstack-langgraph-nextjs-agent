@@ -65,7 +65,10 @@ export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
         <>
           <Conversation>
             <ConversationContent className="w-full m-auto lg:w-[92%] xl:w-[85%] 2xl:w-[75%]">
-              <MessageList messages={messages} />
+              <MessageList
+                messages={messages}
+                isStreaming={isSending}
+              />
             </ConversationContent>
           </Conversation>
           <div className="shrink-0">

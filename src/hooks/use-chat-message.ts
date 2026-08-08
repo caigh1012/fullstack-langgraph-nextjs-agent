@@ -129,11 +129,23 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
         text = String(message.content ?? '');
       }
 
-      // content，才返回消息
-      if (text.trim()) {
+      // 提取推理内容（reasoning_content），即使主文本为空也需要保留
+      const additionalKwargs = (message.additional_kwargs as Record<string, unknown>) || undefined;
+      const reasoningRaw =
+        (additionalKwargs?.reasoning_content as unknown) ??
+        (additionalKwargs?.reasoning as unknown) ??
+        (additionalKwargs?.thoughts as unknown);
+      const reasoning = typeof reasoningRaw === 'string' ? reasoningRaw : '';
+
+      // content 或 reasoning 任意一个非空时，才返回消息
+      if (text.trim() || reasoning.trim()) {
         return {
           type: 'ai',
-          data: { id: (message.id as string) || Date.now().toString(), content: text },
+          data: {
+            id: (message.id as string) || Date.now().toString(),
+            content: text,
+            ...(additionalKwargs && { additional_kwargs: additionalKwargs }),
+          },
         };
       }
     }
