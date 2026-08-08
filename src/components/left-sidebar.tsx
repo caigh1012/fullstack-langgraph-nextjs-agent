@@ -29,11 +29,17 @@ import { Button } from './ui/button';
 import { Spinner } from './ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useLocation } from 'react-use';
+import MCPServerList from './mcp-server-list';
+import { useCallback, useState } from 'react';
 
 export function LeftSidebar() {
   const { protocol } = useLocation();
   const { state, isMobile } = useSidebar();
   const { userInfo, loggingOut, logout } = useUserInfoContext();
+
+  const [showMCPConfig, setShowMCPConfig] = useState(false);
+  const openMCPConfig = useCallback(() => setShowMCPConfig(true), []);
+  const closeMCPConfig = useCallback(() => setShowMCPConfig(false), []);
 
   return (
     <Sidebar>
@@ -121,7 +127,7 @@ export function LeftSidebar() {
                 <Boxes />
                 自定义模型
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={openMCPConfig}>
                 <Settings className="h-4 w-4" />
                 MCP配置
               </DropdownMenuItem>
@@ -158,6 +164,12 @@ export function LeftSidebar() {
         </AlertDialogContent>
       </AlertDialog>
       <SidebarRail />
+
+      {/* 侧边栏内容：MCP服务器列表 */}
+      <MCPServerList
+        isOpen={showMCPConfig}
+        onClose={closeMCPConfig}
+      />
     </Sidebar>
   );
 }

@@ -8,8 +8,11 @@ import { SvgIcon } from '@/components/svg-icon';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { LeftSidebar } from '@/components/left-sidebar';
+import { OAuthToast } from '@/components/oauth-toast';
 import { FirstMessageProvider } from '@/contexts/first-message-context';
 import { UISettingContextProvider } from '@/contexts/ui-settings-context';
+import { Suspense } from 'react';
+import { useMCPTools } from '@/hooks/use-mcp-tools';
 
 /**
  * 用户登录后的布局
@@ -17,6 +20,10 @@ import { UISettingContextProvider } from '@/contexts/ui-settings-context';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+
+  const { data: mcpTools } = useMCPTools();
+
+  console.log(mcpTools, '<___mcpTools');
 
   return (
     <UserInfoProvider>
@@ -68,6 +75,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <div className="relative h-[calc(100vh-3rem)] flex-1">{children}</div>
               </main>
             </SidebarProvider>
+            <Suspense fallback={null}>
+              <OAuthToast />
+            </Suspense>
           </FirstMessageProvider>
         </TooltipProvider>
       </UISettingContextProvider>
