@@ -3,7 +3,7 @@ import { PrismaClient } from '../../../generated/prisma/client';
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
-// Prevent multiple instances in dev with HMR
+// 使用 HMR 防止开发时出现多个实例
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient; adapter?: PrismaPg };
 
 const adapter = globalForPrisma.adapter || new PrismaPg({ connectionString });

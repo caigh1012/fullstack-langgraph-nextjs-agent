@@ -4,7 +4,7 @@ import { TOKEN_COOKIE_KEY } from './constants';
 
 const publicRoutes = ['/login', '/register'];
 
-// This function can be marked `async` if using `await` inside
+// 如果在函数内部使用 `await`，可以将此函数标记为 `async`
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const cookies = request.cookies;

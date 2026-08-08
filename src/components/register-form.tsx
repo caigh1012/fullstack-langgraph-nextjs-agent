@@ -125,6 +125,7 @@ export default function RegisterForm() {
       </CardHeader>
       <CardContent className="py-6">
         <form
+          autoComplete="on"
           className="space-y-5"
           onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
@@ -133,6 +134,8 @@ export default function RegisterForm() {
               <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="username"
+                type="text"
+                autoComplete="username"
                 placeholder="请输入用户名"
                 className="h-10 pl-10 text-sm"
                 {...register('username')}
@@ -148,6 +151,7 @@ export default function RegisterForm() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
                 placeholder="请输入密码"
                 className="h-10 pl-10 text-sm"
                 {...register('password')}

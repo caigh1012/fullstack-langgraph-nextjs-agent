@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { EMAIL_REGEX, GENDER_OPTIONS } from '@/constants';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
-import { useLocation } from 'react-use';
+import { toProtocolRelativeUrl } from '@/utils/get-url';
 
 const userProfileFormSchema = z.object({
   nickname: z.string().trim().min(1, '昵称不能为空').max(12, '昵称长度不能超过12位'),
@@ -33,8 +33,6 @@ const userProfileFormSchema = z.object({
 type UserProfileFormValues = z.infer<typeof userProfileFormSchema>;
 
 export default function UserInfoPage() {
-  const { protocol } = useLocation();
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { userInfo, refreshUserInfo } = useUserInfoContext();
 
@@ -137,6 +135,7 @@ export default function UserInfoPage() {
   }, [userInfo, reset]);
 
   const avatarUrl = useWatch({ control, name: 'avatarUrl' });
+  const resolvedAvatarUrl = toProtocolRelativeUrl(avatarUrl);
 
   const resetAvatar = () => {
     setValue('avatarUrl', '', { shouldDirty: true });
@@ -243,9 +242,9 @@ export default function UserInfoPage() {
             <Label>头像</Label>
             <div className="flex flex-col items-center gap-3">
               <Avatar className="size-24">
-                {avatarUrl ? (
+                {resolvedAvatarUrl ? (
                   <AvatarImage
-                    src={`${protocol}//${avatarUrl}`}
+                    src={resolvedAvatarUrl}
                     alt="avatar"
                   />
                 ) : null}

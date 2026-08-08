@@ -2,7 +2,7 @@ import { streamResponse } from '@/lib/agent/utils';
 import { withAuth } from '@/lib/auth/with-auth';
 import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 import { MessageResponse } from '@/types/messages';
-import { getThreadId } from '@/utils/get-thread-id';
+import { generateThreadId } from '@/utils/generate-thread-id';
 import { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
           (async () => {
             try {
               const iterable = await streamResponse({
-                threadId: getThreadId(userId, threadId),
+                threadId: generateThreadId(userId, threadId),
                 userText: userContent,
                 opts: {
                   model,

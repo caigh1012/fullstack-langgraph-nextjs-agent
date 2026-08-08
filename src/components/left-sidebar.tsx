@@ -28,14 +28,15 @@ import {
 import { Button } from './ui/button';
 import { Spinner } from './ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { useLocation } from 'react-use';
 import MCPServerList from './mcp-server-list';
 import { useCallback, useState } from 'react';
+import { toProtocolRelativeUrl } from '@/utils/get-url';
 
 export function LeftSidebar() {
-  const { protocol } = useLocation();
   const { state, isMobile } = useSidebar();
   const { userInfo, loggingOut, logout } = useUserInfoContext();
+  const avatarUrl = toProtocolRelativeUrl(userInfo?.avatarUrl);
+  const avatarAlt = userInfo?.nickname || userInfo?.email || 'User avatar';
 
   const [showMCPConfig, setShowMCPConfig] = useState(false);
   const openMCPConfig = useCallback(() => setShowMCPConfig(true), []);
@@ -67,10 +68,10 @@ export function LeftSidebar() {
                 type="button"
                 className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center">
                 <Avatar size="lg">
-                  {userInfo?.avatarUrl && (
+                  {avatarUrl && (
                     <AvatarImage
-                      src={`${protocol}//${userInfo.avatarUrl}`}
-                      alt={userInfo.nickname || userInfo.email}
+                      src={avatarUrl}
+                      alt={avatarAlt}
                     />
                   )}
                   <AvatarFallback>
@@ -98,10 +99,10 @@ export function LeftSidebar() {
                 {/* 用户个人信息 */}
                 <div className="flex items-center gap-2 rounded-md px-2 py-1.5">
                   <Avatar size="lg">
-                    {userInfo?.avatarUrl && (
+                    {avatarUrl && (
                       <AvatarImage
-                        src={`${protocol}//${userInfo.avatarUrl}`}
-                        alt={userInfo.nickname || userInfo.email}
+                        src={avatarUrl}
+                        alt={avatarAlt}
                       />
                     )}
                     <AvatarFallback>

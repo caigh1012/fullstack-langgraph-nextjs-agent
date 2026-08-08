@@ -12,7 +12,6 @@ import { OAuthToast } from '@/components/oauth-toast';
 import { FirstMessageProvider } from '@/contexts/first-message-context';
 import { UISettingContextProvider } from '@/contexts/ui-settings-context';
 import { Suspense } from 'react';
-import { useMCPTools } from '@/hooks/use-mcp-tools';
 
 /**
  * 用户登录后的布局
@@ -20,10 +19,6 @@ import { useMCPTools } from '@/hooks/use-mcp-tools';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-
-  const { data: mcpTools } = useMCPTools();
-
-  console.log(mcpTools, '<___mcpTools');
 
   return (
     <UserInfoProvider>

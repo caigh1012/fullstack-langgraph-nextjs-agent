@@ -3,7 +3,7 @@ import 'server-only';
 import { BaseMessage } from '@langchain/core/messages';
 import { postgresCheckpointer } from '@/lib/agent/memory';
 import prisma from '@/lib/database/prisma';
-import { getThreadId } from '@/utils/get-thread-id';
+import { generateThreadId } from '@/utils/generate-thread-id';
 
 /**
  * 获取 Threade 消息历史
@@ -16,7 +16,7 @@ export async function fetchThreadHistory(userId: string, threadId: string) {
 
     // 从数据库中获取消息历史
     const history = await postgresCheckpointer.get({
-      configurable: { thread_id: getThreadId(userId, threadId) },
+      configurable: { thread_id: generateThreadId(userId, threadId) },
     });
 
     const messages: BaseMessage[] = Array.isArray(history?.channel_values?.messages)
