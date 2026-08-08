@@ -1,16 +1,15 @@
-import { streamResponse } from '@/lib/agent/utils';
+import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
+import { ensureAgent } from '@/lib/agent';
 import { withAuth } from '@/lib/auth/with-auth';
 import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
-import { MessageResponse } from '@/types/messages';
+import { ResultVO } from '@/pojo/vo/common/result.vo';
 import { generateThreadId } from '@/utils/generate-thread-id';
-import { NextRequest } from 'next/server';
+import { HumanMessage } from '@langchain/core/messages';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-/**
- * 聊天响应式
- */
 export async function POST(req: NextRequest) {
   try {
     return await withAuth(req, async (_req, payload) => {
@@ -24,67 +23,43 @@ export async function POST(req: NextRequest) {
         attachments,
       } = body as MessageStreamDto & { threadId: string };
 
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream<Uint8Array>({
-        start(controller) {
-          const send = (data: MessageResponse) => {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-          };
+      if (!threadId) throw new Error('threadId is required');
 
-          // Initial comment to establish stream
-          controller.enqueue(encoder.encode(': connected\n\n'));
+      let messageContent: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 
-          (async () => {
-            try {
-              const iterable = await streamResponse({
-                threadId: generateThreadId(userId, threadId),
-                userText: userContent,
-                opts: {
-                  model,
-                  provider,
-                  attachments,
-                },
-              });
+      if (attachments && attachments.length > 0) {
+        // const attachmentContents = await processAttachmentsForAI(attachments);
+        messageContent = [{ type: 'text', text: userContent }, ...attachments];
+      } else {
+        messageContent = userContent;
+      }
 
-              for await (const chunk of iterable) {
-                // Only forward AI/tool chunks; ignore human/system
+      const inputs = {
+        messages: [new HumanMessage({ content: messageContent })],
+      };
 
-                if (chunk.type === 'ai' || chunk.type === 'tool') {
-                  send(chunk);
-                }
-              }
+      const agent = await ensureAgent({ model, provider });
 
-              // Signal completion
-              controller.enqueue(encoder.encode('event: done\n'));
-              controller.enqueue(encoder.encode('data: {}\n\n'));
-            } catch (err: unknown) {
-              // Emit an error event (client onerror will capture general network; providing data for diagnostics)
-              controller.enqueue(encoder.encode('event: error\n'));
-              controller.enqueue(
-                encoder.encode(
-                  `data: ${JSON.stringify({ message: (err as Error)?.message || 'Stream error', threadId })}\n\n`,
-                ),
-              );
-            } finally {
-              controller.close();
-            }
-          })();
-        },
-        cancel() {
-          //
-        },
+      const stream = await agent.stream(inputs, {
+        encoding: 'text/event-stream',
+        streamMode: ['updates', 'messages'],
+        configurable: { thread_id: generateThreadId(userId, threadId) },
       });
 
       return new Response(stream, {
         headers: {
-          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache, no-transform',
           Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no',
         },
       });
     });
   } catch (error) {
+    // 处理错误
     console.log(error);
+    return NextResponse.json<ResultVO<null>>(
+      { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
+      { status: HttpCode.INTERNAL_SERVER_ERROR },
+    );
   }
 }

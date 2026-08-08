@@ -21,9 +21,6 @@ interface HttpMCPServerConfig {
 
 type MCPServerConfig = StdioMCPServerConfig | HttpMCPServerConfig;
 
-/**
- * Fetches enabled MCP servers from the database and formats them for MultiServerMCPClient
- */
 export async function getMCPServerConfigs(userId: string): Promise<Record<string, MCPServerConfig>> {
   try {
     const servers = (await getMCPServerList(userId)).filter((server) => server.enabled);
@@ -70,9 +67,6 @@ export async function getMCPServerConfigs(userId: string): Promise<Record<string
   }
 }
 
-/**
- * Creates and initializes a MultiServerMCPClient with the current database configurations
- */
 export async function createMCPClient(userId: string): Promise<MultiServerMCPClient | null> {
   try {
     const mcpServers = await getMCPServerConfigs(userId);
@@ -95,10 +89,6 @@ export async function createMCPClient(userId: string): Promise<MultiServerMCPCli
   }
 }
 
-/**
- * Gets tools from the MCP client if available.
- * Sanitizes tool schemas to be compatible with Google Gemini's function calling API.
- */
 export async function getMCPTools(userId: string) {
   try {
     const client = await createMCPClient(userId);
@@ -108,8 +98,6 @@ export async function getMCPTools(userId: string) {
 
     const tools = await client.getTools();
 
-    // Sanitize tool schemas to remove unsupported JSON Schema keywords
-    // that would cause errors with Google Gemini
     const sanitizedTools = tools.map((tool) => sanitizeTool(tool));
 
     console.log(`Loaded ${sanitizedTools.length} tools from MCP servers`);

@@ -70,6 +70,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <div className="relative h-[calc(100vh-3rem)] flex-1">{children}</div>
               </main>
             </SidebarProvider>
+            {/* OAuth 提示 */}
             <Suspense fallback={null}>
               <OAuthToast />
             </Suspense>

@@ -1,10 +1,10 @@
 import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { HttpBusinessCode } from '@/constants/http';
 import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
-import { AIMessageData, MessageResponse } from '@/types/messages';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { AIMessageData, MessageResponse, ToolCall } from '@/types/messages';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useStream, FetchStreamTransport } from '@langchain/langgraph-sdk/react';
 import { toast } from 'sonner';
 
 export interface UseChatMessageReturn {
@@ -22,10 +22,8 @@ interface UseChatMessageProps {
 }
 
 export function useChatMessage({ threadId }: UseChatMessageProps) {
-  const queryClient = useQueryClient();
   const currentMessageRef = useRef<MessageResponse | null>(null);
-  const [isSending, setIsSending] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const queryClient = useQueryClient();
 
   /**
    * 请求历史消息
@@ -51,8 +49,8 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
 
   const {
     data: messages = [],
+    isPending: isPendingHistory,
     isLoading: isLoadingHistory,
-    isPending,
     error: historyError,
     refetch: refetchMessagesQuery,
   } = useQuery<MessageResponse[]>({
@@ -70,27 +68,134 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
     }
   }, [threadId, refetchMessagesQuery]);
 
-  // const stop = useCallback(() => {
-  //   if (abortControllerRef.current) {
-  //     abortControllerRef.current.abort();
-  //     abortControllerRef.current = null;
-  //   }
-  // }, []);
+  const transport = useMemo(
+    () =>
+      new FetchStreamTransport({
+        apiUrl: '/api/agent/stream',
+        defaultHeaders: {
+          'Content-Type': 'application/json',
+        },
+        // 请求的拦截器
+        onRequest: async (_url: string, init: RequestInit) => {
+          const customBody = JSON.stringify({
+            ...(JSON.parse(init.body as string)?.input || {}),
+          });
+          return {
+            ...init,
+            body: customBody,
+          };
+        },
+      }),
+    [],
+  );
+
+  const stream = useStream({
+    transport,
+    threadId: threadId ?? null,
+    onFinish: () => {
+      currentMessageRef.current = null;
+    },
+    onError: () => {
+      currentMessageRef.current = null;
+    },
+  });
+
+  const processAIMessage = useCallback((message: Record<string, unknown>): MessageResponse | null => {
+    const hasToolCall =
+      Array.isArray(message.content) &&
+      message.content.some((item: unknown) => item && typeof item === 'object' && 'functionCall' in item);
+    if (hasToolCall) {
+      // 返回完整的 AIMessageData 以保留所有信息
+      return {
+        type: 'ai',
+        data: {
+          id: (message.id as string) || Date.now().toString(),
+          content: typeof message.content === 'string' ? message.content : '',
+          tool_calls: (message.tool_calls as ToolCall[]) || undefined,
+          additional_kwargs: (message.additional_kwargs as Record<string, unknown>) || undefined,
+          response_metadata: (message.response_metadata as Record<string, unknown>) || undefined,
+        },
+      };
+    } else {
+      // 处理常规文本内容——从各种内容类型中提取文本
+      let text = '';
+      if (typeof message.content === 'string') {
+        text = message.content;
+      } else if (Array.isArray(message.content)) {
+        text = message.content
+          .map((c: string | { text?: string }) => (typeof c === 'string' ? c : c?.text || ''))
+          .join('');
+      } else {
+        text = String(message.content ?? '');
+      }
+
+      // content，才返回消息
+      if (text.trim()) {
+        return {
+          type: 'ai',
+          data: { id: (message.id as string) || Date.now().toString(), content: text },
+        };
+      }
+    }
+    return null;
+  }, []);
+
+  useEffect(() => {
+    if (!threadId || stream.messages.length === 0) return;
+
+    const message = stream.messages[stream.messages.length - 1];
+
+    // 只处理 AI 类型的消息，Human 消息已由 sendMessage 添加到缓存
+    if (message.type !== 'ai' && (message as Record<string, unknown>).constructor?.name !== 'AIMessage') return;
+
+    const processedMessage = processAIMessage(message);
+
+    if (!processedMessage) return;
+    const data = processedMessage.data as AIMessageData;
+
+    // 检查是否是新消息
+    if (!currentMessageRef.current || currentMessageRef.current?.data?.id !== processedMessage.data?.id) {
+      currentMessageRef.current = processedMessage;
+      queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [
+        ...old,
+        currentMessageRef.current!,
+      ]);
+    } else {
+      const currentData = currentMessageRef.current.data as AIMessageData;
+
+      // 更新当前消息内容
+      currentMessageRef.current = {
+        ...currentMessageRef.current,
+        data: {
+          ...currentData,
+          content: data.content,
+          // 如果存在，请更新工具调用数据
+          ...(data.tool_calls && { tool_calls: data.tool_calls }),
+          ...(data.additional_kwargs && { additional_kwargs: data.additional_kwargs }),
+          ...(data.response_metadata && { response_metadata: data.response_metadata }),
+        },
+      };
+
+      queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => {
+        // 查找当前消息在缓存中的索引
+        const idx = old.findIndex((m) => m?.data?.id === currentMessageRef.current!.data.id);
+        // 如果消息不存在，直接返回旧缓存
+        if (idx === -1) return old;
+        // 更新缓存中的消息内容
+        const clone = [...old];
+        // 替换缓存中的消息内容
+        clone[idx] = currentMessageRef.current!;
+        return clone;
+      });
+    }
+  }, [stream.messages, threadId, processAIMessage]);
 
   /**
    * 发送消息
    */
   const sendMessage = useCallback(
     async (message: MessageStreamDto) => {
-      if (!threadId) return;
-
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
+      if (!threadId || !message.content?.trim()) return;
 
       const tempId = `temp-${Date.now()}`;
       const userMessage: MessageResponse = {
@@ -104,95 +209,22 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
       // 使用 queryClient 更新本地缓存
       queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [...old, userMessage]);
 
-      setIsSending(true);
-
-      try {
-        fetchEventSource('/api/agent/stream', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: abortController.signal,
-          body: JSON.stringify({
-            threadId,
-            content: message.content,
-            ...(message.model && { model: message.model }),
-            ...(message.provider && { provider: message.provider }),
-            ...(message.attachments && { attachments: message.attachments }),
-          }),
-          onmessage: (event) => {
-            if (!event.data) return;
-            const messageResponse = JSON.parse(event.data) as MessageResponse;
-            const data = messageResponse.data as AIMessageData;
-            // 根据 data.id 判断是否是新消息
-            if (!currentMessageRef.current || currentMessageRef.current?.data?.id !== messageResponse.data?.id) {
-              currentMessageRef.current = messageResponse;
-              queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [
-                ...old,
-                currentMessageRef.current!,
-              ]);
-            } else {
-              const currentData = currentMessageRef.current.data as AIMessageData;
-              const newContent =
-                typeof data.content === 'string' && typeof currentData.content === 'string'
-                  ? currentData.content + data.content
-                  : data.content;
-
-              // 更新当前消息内容
-              currentMessageRef.current = {
-                ...currentMessageRef.current,
-                data: {
-                  ...currentData,
-                  content: newContent,
-                  // Update tool call data if present
-                  ...(data.tool_calls && { tool_calls: data.tool_calls }),
-                  ...(data.additional_kwargs && { additional_kwargs: data.additional_kwargs }),
-                  ...(data.response_metadata && { response_metadata: data.response_metadata }),
-                },
-              };
-
-              queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => {
-                // Find the in-flight assistant message by its stable response id
-                const idx = old.findIndex((m) => m?.data?.id === currentMessageRef.current!.data.id);
-                // If it's not in the cache (race or refresh), keep existing state
-                if (idx === -1) return old;
-                // Immutable update so React Query subscribers are notified
-                const clone = [...old];
-                // Replace only the updated message entry with the latest accumulated content
-                clone[idx] = currentMessageRef.current!;
-                return clone;
-              });
-            }
-          },
-          onerror: (error) => {
-            const errorMsg: MessageResponse = {
-              type: 'error',
-              data: { id: `err-${Date.now()}`, content: `⚠️ ${error?.message || '发送消息失败'}` },
-            };
-            queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [...old, errorMsg]);
-            setIsSending(false);
-            currentMessageRef.current = null;
-            abortControllerRef.current = null;
-            throw error;
-          },
-          onclose: () => {
-            setIsSending(false);
-            abortControllerRef.current = null;
-            currentMessageRef.current = null;
-          },
-        });
-      } catch (error) {
-        throw error;
-      }
+      await stream.submit({
+        threadId,
+        content: message.content,
+        ...(message.model && { model: message.model }),
+        ...(message.provider && { provider: message.provider }),
+        ...(message.attachments && { attachments: message.attachments }),
+      });
     },
-    [threadId, queryClient],
+    [threadId, stream, queryClient],
   );
 
   return {
     messages,
     isLoadingHistory,
-    isPending,
-    isSending,
+    isPending: isPendingHistory,
+    isSending: stream.isLoading,
     historyError,
     sendMessage,
     refetchMessages: refetchMessagesQuery,
