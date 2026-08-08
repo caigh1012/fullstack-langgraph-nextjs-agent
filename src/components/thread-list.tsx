@@ -113,6 +113,7 @@ export function ThreadList() {
     setRefreshing(true);
     try {
       await refetchThreads();
+      toast.success('会话列表刷新成功');
     } finally {
       setRefreshing(false);
     }
@@ -125,7 +126,11 @@ export function ThreadList() {
     if (!renamingId) return;
     setSavingRename(true);
     try {
-      const nextTitle = renameValue.trim() || 'Untitled thread';
+      const nextTitle = renameValue.trim() || '未命名会话';
+      if (nextTitle === '未命名会话') {
+        toast.error('会话名称不能为空');
+        return;
+      }
       await updateThread(renamingId, nextTitle);
       // 刷新会话列表
       await refetchThreads();
@@ -213,7 +218,9 @@ export function ThreadList() {
                   {filtered.map((thread) => {
                     const isRenaming = renamingId === thread.id;
                     return (
-                      <SidebarMenuItem key={thread.id}>
+                      <SidebarMenuItem
+                        key={thread.id}
+                        className="mb-1">
                         {!isRenaming ? (
                           <>
                             <SidebarMenuButton
@@ -225,7 +232,7 @@ export function ThreadList() {
                                 <div className="truncate leading-5 font-medium">
                                   {thread.title || `Thread ${thread.id.slice(0, 8)}`}
                                 </div>
-                                <div className="mt-0.5 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                                <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
                                   <div className="shrink-0 tabular-nums">{formatDateTime(thread.createdAt)}</div>
                                 </div>
                               </div>
@@ -260,7 +267,7 @@ export function ThreadList() {
                           </>
                         ) : (
                           <div
-                            className="bg-sidebar-accent/40 border-sidebar-border/60 flex items-center gap-2 rounded-md border p-2"
+                            className="bg-sidebar-accent/40 border-sidebar-border/60 flex h-14 items-center gap-2 rounded-md border p-2"
                             onClick={(e) => e.stopPropagation()}>
                             <Input
                               ref={inputRef}
@@ -272,6 +279,7 @@ export function ThreadList() {
                                 if (e.key === 'Escape') cancelRename();
                               }}
                               placeholder="输入会话名称"
+                              maxLength={80}
                               className="h-8 flex-1 text-sm"
                             />
                             <Button

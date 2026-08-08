@@ -340,10 +340,12 @@ export const usePromptInputReferencedSources = () => {
 
 export type PromptInputActionAddAttachmentsProps = ComponentProps<typeof DropdownMenuItem> & {
   label?: string;
+  icon?: ReactNode;
 };
 
 export const PromptInputActionAddAttachments = ({
   label = 'Add photos or files',
+  icon,
   ...props
 }: PromptInputActionAddAttachmentsProps) => {
   const attachments = usePromptInputAttachments();
@@ -360,17 +362,19 @@ export const PromptInputActionAddAttachments = ({
     <DropdownMenuItem
       {...props}
       onSelect={handleSelect}>
-      <ImageIcon className="mr-2 size-4" /> {label}
+      {icon ?? <ImageIcon className="mr-2 size-4" />} {label}
     </DropdownMenuItem>
   );
 };
 
 export type PromptInputActionAddScreenshotProps = ComponentProps<typeof DropdownMenuItem> & {
   label?: string;
+  icon?: ReactNode;
 };
 
 export const PromptInputActionAddScreenshot = ({
   label = 'Take screenshot',
+  icon,
   onSelect,
   ...props
 }: PromptInputActionAddScreenshotProps) => {
@@ -402,7 +406,7 @@ export const PromptInputActionAddScreenshot = ({
     <DropdownMenuItem
       {...props}
       onSelect={handleSelect}>
-      <Monitor className="mr-2 size-4" />
+      {icon ?? <Monitor className="mr-2 size-4" />}
       {label}
     </DropdownMenuItem>
   );

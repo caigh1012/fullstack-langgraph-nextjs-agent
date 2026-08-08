@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Check, Loader2, Wand2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HttpBusinessCode } from '@/constants/http';
+import { toast } from 'sonner';
 
 interface MCPServer {
   id?: string;
@@ -163,7 +164,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
     // Final validation before saving
     if (!validateJson(jsonInput)) {
       setSaving(false);
-      setError(validationError || 'Please fix JSON validation errors before saving');
+      setError(validationError || '请在保存前修复 JSON 验证错误');
       return;
     }
 
@@ -225,9 +226,10 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
       }
 
       onSaved();
+      toast.success('配置保存成功');
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save configuration');
+      setError(err instanceof Error ? err.message : '保存配置失败');
     } finally {
       setSaving(false);
     }
@@ -241,7 +243,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
         <div className="flex items-center justify-between border-b border-border p-4">
           <h2 className="text-lg font-semibold text-card-foreground">
             {/* 显示表单标题，根据是否有 MCP 数据来判断 */}
-            {server ? 'Edit MCP Server' : 'Configure MCP Servers'}
+            {server ? '编辑 MCP 配置' : '添加 MCP 配置'}
           </h2>
           <Button
             variant="ghost"
@@ -298,7 +300,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
               {/* 显示 JSON 格式验证错误 */}
               {validationError && <p className="mt-1 text-xs text-destructive">{validationError}</p>}
               <p className="mt-2 text-xs text-muted-foreground">
-                Configure both local (stdio) and remote (http) MCP servers. Paste JSON to auto-format.
+                配置本地（stdio）和远程（http）MCP服务器。粘贴JSON以自动格式化。
               </p>
             </div>
 
@@ -315,7 +317,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
             variant="outline"
             onClick={onClose}
             className="h-9 cursor-pointer px-4 text-sm font-medium">
-            Cancel
+            取消
           </Button>
           <Button
             onClick={handleSave}
@@ -327,12 +329,12 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
                   size={16}
                   className="animate-spin"
                 />
-                Saving...
+                保存中...
               </>
             ) : (
               <>
                 <Check size={16} />
-                Save Configuration
+                保存配置
               </>
             )}
           </Button>

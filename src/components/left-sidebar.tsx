@@ -124,10 +124,11 @@ export function LeftSidebar() {
                   修改个人信息
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              {/* 自定义模型配置（暂未实现） */}
+              {/* <DropdownMenuItem>
                 <Boxes />
                 自定义模型
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem onClick={openMCPConfig}>
                 <Settings className="h-4 w-4" />
                 MCP配置

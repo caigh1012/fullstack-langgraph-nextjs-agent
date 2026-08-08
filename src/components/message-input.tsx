@@ -17,7 +17,7 @@ import {
   PromptInputTools,
   usePromptInputController,
 } from '@/components/ai-elements/prompt-input';
-import { GlobeIcon } from 'lucide-react';
+import { CameraIcon, GlobeIcon, PaperclipIcon } from 'lucide-react';
 import { MAX_ATTACHMENTS } from '@/constants';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
 import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
@@ -51,14 +51,20 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
         <PromptInputTools>
           <PromptInputActionMenu>
             <PromptInputActionMenuTrigger />
-            <PromptInputActionMenuContent>
-              <PromptInputActionAddAttachments />
-              <PromptInputActionAddScreenshot />
+            <PromptInputActionMenuContent className="min-w-48">
+              <PromptInputActionAddAttachments
+                icon={<PaperclipIcon className="mr-2 size-4" />}
+                label="上传文件或图片"
+              />
+              <PromptInputActionAddScreenshot
+                icon={<CameraIcon className="mr-2 size-4" />}
+                label="屏幕截图"
+              />
             </PromptInputActionMenuContent>
           </PromptInputActionMenu>
           <PromptInputButton>
             <GlobeIcon size={16} />
-            <span>Search</span>
+            <span>智能搜索</span>
           </PromptInputButton>
           <ModelSelect
             model={model}

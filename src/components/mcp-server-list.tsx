@@ -227,18 +227,21 @@ export default function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-card text-card-foreground shadow-xl">
           <div className="flex items-center justify-between border-b border-border p-4">
-            <h2 className="text-lg font-semibold text-card-foreground">MCP Servers</h2>
+            <h2 className="text-lg font-semibold text-card-foreground">MCP 配置列表</h2>
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => setShowForm(true)}
                 className="h-auto gap-2 rounded-md px-3 py-1.5 hover:bg-primary/90">
                 <Plus size={16} />
-                Add Server
+                添加 MCP 配置
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => fetchServers()}
+                onClick={async () => {
+                  await fetchServers();
+                  toast.success('刷新成功');
+                }}
                 disabled={loading}
                 className="size-auto h-auto w-auto cursor-pointer p-1.5 text-muted-foreground hover:bg-transparent hover:text-foreground"
                 title="Refresh">
@@ -385,7 +388,7 @@ export default function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除 MCP 服务器 “{pendingDelete?.name}” 吗？此操作无法撤销。
+              确定要删除 “{pendingDelete?.name}” MCP 配置吗？此操作无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
