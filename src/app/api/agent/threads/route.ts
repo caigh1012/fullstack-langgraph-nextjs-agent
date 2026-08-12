@@ -16,7 +16,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(req: NextRequest) {
   try {
-    return await withAuth(req, async (_req, payload) => {
+    return await withAuth(req, async (payload) => {
       const userId = payload.sub as string;
 
       const threads = await getThreadList(userId);
@@ -54,10 +54,10 @@ const threadCreateSchema = z.object({
  */
 export async function POST(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
 
-      const body = await _req.json();
+      const body = await req.json();
       const result = threadCreateSchema.safeParse(body);
 
       if (!result.success) {
@@ -97,10 +97,10 @@ const threadUpdateSchema = z.object({
  */
 export async function PATCH(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
 
-      const body = await _req.json();
+      const body = await req.json();
       const result = threadUpdateSchema.safeParse(body);
 
       if (!result.success) {
@@ -139,10 +139,10 @@ const threadDeleteSchema = z.object({
  */
 export async function DELETE(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
 
-      const body = await _req.json();
+      const body = await req.json();
       const result = threadDeleteSchema.safeParse(body);
 
       if (!result.success) {

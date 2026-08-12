@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ serverId: string }> }) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const { serverId } = await params;
       const { searchParams } = new URL(req.url);

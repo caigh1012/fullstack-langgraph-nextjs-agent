@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const { sub, username } = payload;
       const user = await getUserInfo({ id: sub as string, username });
       return NextResponse.json(
@@ -43,7 +43,7 @@ const updateUserSchema = z.object({
  */
 export async function PUT(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const { sub, username } = payload;
       const body = await req.json();
 

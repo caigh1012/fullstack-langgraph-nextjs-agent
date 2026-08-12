@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ threadId: string }> }) {
   try {
-    return await withAuth(req, async (_req, payload) => {
+    return await withAuth(req, async (payload) => {
       const userId = payload.sub as string;
 
       const { threadId } = await params;

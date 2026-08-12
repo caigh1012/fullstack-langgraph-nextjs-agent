@@ -6,10 +6,7 @@ import { JsonWebTokenError, JwtPayload, TokenExpiredError } from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from './jwt';
 
-export const withAuth = async (
-  req: NextRequest,
-  handler: (req: NextRequest, payload: JwtPayload) => Promise<Response>,
-) => {
+export const withAuth = async (req: NextRequest, handler: (payload: JwtPayload) => Promise<Response>) => {
   try {
     // token 在这里一定会存在，若不存在会被 proxy 拦截
     const token = req.cookies.get(TOKEN_COOKIE_KEY)?.value as string;
@@ -24,7 +21,7 @@ export const withAuth = async (
     }
 
     // 2. 验证通过，执行真正的处理函数
-    return await handler(req, payload);
+    return await handler(payload);
   } catch (error) {
     if (error instanceof TokenExpiredError) {
       return NextResponse.json<ResultVO<null>>(

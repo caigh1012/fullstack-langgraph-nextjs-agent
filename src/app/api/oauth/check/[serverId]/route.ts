@@ -27,7 +27,7 @@ interface CheckOAuthResponse {
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ serverId: string }> }) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const { serverId } = await params;
 

@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const { sub } = payload;
       const list = await getMCPServerList(sub as string);
       return NextResponse.json(
@@ -53,9 +53,9 @@ const createMCPServerSchema = z.discriminatedUnion('type', [
  */
 export async function POST(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
-      const body = await _req.json();
+      const body = await req.json();
 
       const result = createMCPServerSchema.safeParse(body);
       if (!result.success) {
@@ -110,9 +110,9 @@ const updateMCPServerSchema = z
  */
 export async function PATCH(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
-      const body = await _req.json();
+      const body = await req.json();
 
       const result = updateMCPServerSchema.safeParse(body);
       if (!result.success) {
@@ -147,9 +147,9 @@ const deleteMCPServerSchema = z.object({
  */
 export async function DELETE(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
-      const body = await _req.json();
+      const body = await req.json();
 
       const result = deleteMCPServerSchema.safeParse(body);
       if (!result.success) {

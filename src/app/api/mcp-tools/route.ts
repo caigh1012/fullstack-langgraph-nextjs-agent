@@ -160,7 +160,7 @@ function groupMCPTools(tools: MCPClientTool[]): MCPToolsData {
 
 export async function GET(req: NextRequest) {
   try {
-    return withAuth(req, async (_req, payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const tools = await getMCPTools(userId);
       return NextResponse.json(groupMCPTools(tools));
