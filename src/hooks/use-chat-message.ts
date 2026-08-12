@@ -96,6 +96,7 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
       currentMessageRef.current = null;
     },
     onError: () => {
+      toast.error('请求失败');
       currentMessageRef.current = null;
     },
   });
@@ -215,6 +216,7 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
         data: {
           id: tempId,
           content: message.content,
+          ...(message.attachments && { attachments: message.attachments }),
         },
       };
 

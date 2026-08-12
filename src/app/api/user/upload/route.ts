@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
-import { AVATAR_BUCKET_NAME, minioClient } from '@/lib/minio/client';
+import { AVATAR_BUCKET_NAME, buildMinioObjectUrl, minioClient } from '@/lib/minio/client';
 import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           code: HttpBusinessCode.SUCCESS,
           message: HttpMessage.REQUEST_SUCCESS,
           data: {
-            url: `${process.env.MINIO_ENDPOINT as string}:${process.env.MINIO_PORT as string}/${AVATAR_BUCKET_NAME}/${objectName}`,
+            url: buildMinioObjectUrl(AVATAR_BUCKET_NAME, objectName),
           },
         },
         { status: HttpCode.SUCCESS },

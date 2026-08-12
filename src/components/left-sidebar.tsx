@@ -30,12 +30,11 @@ import { Spinner } from './ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import MCPServerList from './mcp-server-list';
 import { useCallback, useState } from 'react';
-import { toProtocolRelativeUrl } from '@/utils/get-url';
 
 export function LeftSidebar() {
   const { state, isMobile } = useSidebar();
   const { userInfo, loggingOut, logout } = useUserInfoContext();
-  const avatarUrl = toProtocolRelativeUrl(userInfo?.avatarUrl);
+  const avatarUrl = userInfo?.avatarUrl;
   const avatarAlt = userInfo?.nickname || userInfo?.email || 'User avatar';
 
   const [showMCPConfig, setShowMCPConfig] = useState(false);

@@ -18,7 +18,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { EMAIL_REGEX, GENDER_OPTIONS } from '@/constants';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
-import { toProtocolRelativeUrl } from '@/utils/get-url';
 
 const userProfileFormSchema = z.object({
   nickname: z.string().trim().min(1, '昵称不能为空').max(12, '昵称长度不能超过12位'),
@@ -135,7 +134,7 @@ export default function UserInfoPage() {
   }, [userInfo, reset]);
 
   const avatarUrl = useWatch({ control, name: 'avatarUrl' });
-  const resolvedAvatarUrl = toProtocolRelativeUrl(avatarUrl);
+  const resolvedAvatarUrl = avatarUrl;
 
   const resetAvatar = () => {
     setValue('avatarUrl', '', { shouldDirty: true });

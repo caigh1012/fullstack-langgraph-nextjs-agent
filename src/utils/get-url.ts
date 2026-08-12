@@ -17,15 +17,3 @@ export function getAppUrl(): string {
       "Set it to your application's public URL (e.g., https://myapp.com)",
   );
 }
-
-export function toProtocolRelativeUrl(url?: string | null): string | undefined {
-  if (!url) {
-    return undefined;
-  }
-
-  if (/^https?:\/\//i.test(url)) {
-    return url;
-  }
-
-  return `//${url.replace(/^\/+/, '')}`;
-}

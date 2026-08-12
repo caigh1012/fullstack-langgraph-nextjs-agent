@@ -1,6 +1,7 @@
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { ensureAgent } from '@/lib/agent';
 import { withAuth } from '@/lib/auth/with-auth';
+import { processAttachmentsForAI } from '@/lib/minio/content';
 import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 import { ResultVO } from '@/pojo/vo/common/result.vo';
 import { generateThreadId } from '@/utils/generate-thread-id';
@@ -28,8 +29,8 @@ export async function POST(req: NextRequest) {
       let messageContent: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 
       if (attachments && attachments.length > 0) {
-        // const attachmentContents = await processAttachmentsForAI(attachments);
-        messageContent = [{ type: 'text', text: userContent }, ...attachments];
+        const attachmentContents = await processAttachmentsForAI(attachments);
+        messageContent = [{ type: 'text', text: userContent }, ...attachmentContents];
       } else {
         messageContent = userContent;
       }
