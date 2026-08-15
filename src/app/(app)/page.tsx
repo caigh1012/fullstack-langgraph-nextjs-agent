@@ -5,6 +5,7 @@ import { useThreads } from '@/hooks/use-threads';
 import { nanoid } from 'nanoid';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 export default function App() {
   const { createThread, refetchThreads } = useThreads();
@@ -15,10 +16,10 @@ export default function App() {
       try {
         const threadId = nanoid(36);
         await createThread(threadId, content);
-        // todo：待优化
-        await refetchThreads();
+        refetchThreads();
         router.replace(`/thread/${threadId}`);
-      } finally {
+      } catch {
+        toast.error('会话创建失败，请稍后重试');
       }
     },
     [createThread, refetchThreads, router],

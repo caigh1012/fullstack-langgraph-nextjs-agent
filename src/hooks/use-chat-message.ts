@@ -208,7 +208,7 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
    */
   const sendMessage = useCallback(
     async (message: MessageStreamDto) => {
-      if (!threadId || !message.content?.trim()) return;
+      if (!threadId) return;
 
       const tempId = `temp-${Date.now()}`;
       const userMessage: MessageResponse = {

@@ -14,10 +14,12 @@ import {
   ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
 import { PromptInputButton } from '@/components/ai-elements/prompt-input';
-import { models } from '@/constants/models';
+import { HttpBusinessCode } from '@/constants/http';
 import { SelectLLMModel } from '@/types/select-model';
+import { useQuery } from '@tanstack/react-query';
 import { CheckIcon } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
+import { toast } from 'sonner';
 
 interface ModelItemProps {
   m: SelectLLMModel;
@@ -32,15 +34,10 @@ const ModelItem = memo(({ m, selectedModel, onSelect }: ModelItemProps) => {
       key={m.id}
       onSelect={handleSelect}
       value={m.id}>
-      <ModelSelectorLogo provider={m.chefSlug} />
+      <ModelSelectorLogo provider={m.provider} />
       <ModelSelectorName>{m.name}</ModelSelectorName>
       <ModelSelectorLogoGroup>
-        {m.providers.map((provider) => (
-          <ModelSelectorLogo
-            key={provider}
-            provider={provider}
-          />
-        ))}
+        <ModelSelectorLogo provider={m.provider} />
       </ModelSelectorLogoGroup>
       {selectedModel === m.id ? <CheckIcon className="ml-auto size-4" /> : <div className="ml-auto size-4" />}
     </ModelSelectorItem>
@@ -65,13 +62,31 @@ export function ModelSelect({ model, onModelChange: onModelChange }: ModelSelect
     [onModelChange],
   );
 
+  const { data: groupedModels = [] } = useQuery<SelectLLMModel[][]>({
+    queryKey: ['models'],
+    queryFn: async () => {
+      const response = await fetch('/api/model');
+      if (!response.ok) {
+        const errorMessage = '获取模型列表失败';
+        toast.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+      const data = await response.json();
+      if (data.code === HttpBusinessCode.FAIL) {
+        toast.error(data.message || '获取模型列表失败');
+        throw new Error(data.message || '获取模型列表失败');
+      }
+      return data.data as SelectLLMModel[][];
+    },
+  });
+
   return (
     <ModelSelector
       onOpenChange={setOpen}
       open={open}>
       <ModelSelectorTrigger asChild>
         <PromptInputButton>
-          {model.chefSlug && <ModelSelectorLogo provider={model.chefSlug} />}
+          {model.provider && <ModelSelectorLogo provider={model.provider} />}
           {model.name && <ModelSelectorName>{model.name}</ModelSelectorName>}
         </PromptInputButton>
       </ModelSelectorTrigger>
@@ -79,20 +94,18 @@ export function ModelSelect({ model, onModelChange: onModelChange }: ModelSelect
         <ModelSelectorInput placeholder="Search models..." />
         <ModelSelectorList>
           <ModelSelectorEmpty>未找到模型</ModelSelectorEmpty>
-          {['DeepSeek', 'GLM'].map((chef) => (
+          {groupedModels.map((group) => (
             <ModelSelectorGroup
-              heading={chef}
-              key={chef}>
-              {models
-                .filter((m) => m.chef === chef)
-                .map((m) => (
-                  <ModelItem
-                    key={m.id}
-                    m={m}
-                    onSelect={() => handleModelSelect(m)}
-                    selectedModel={model.id}
-                  />
-                ))}
+              heading={group[0]?.group ?? ''}
+              key={group[0]?.group}>
+              {group.map((m) => (
+                <ModelItem
+                  key={m.id}
+                  m={m}
+                  onSelect={() => handleModelSelect(m)}
+                  selectedModel={model.id}
+                />
+              ))}
             </ModelSelectorGroup>
           ))}
         </ModelSelectorList>

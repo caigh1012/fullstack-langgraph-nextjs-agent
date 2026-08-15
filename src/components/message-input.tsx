@@ -13,7 +13,6 @@ import {
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
   PromptInputBody,
-  PromptInputButton,
   PromptInputFooter,
   PromptInputHeader,
   PromptInputProvider,
@@ -22,7 +21,7 @@ import {
   PromptInputTools,
   usePromptInputController,
 } from '@/components/ai-elements/prompt-input';
-import { CameraIcon, GlobeIcon, PaperclipIcon } from 'lucide-react';
+import { CameraIcon, PaperclipIcon } from 'lucide-react';
 import { MAX_ATTACHMENTS } from '@/constants';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
 import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
@@ -85,7 +84,8 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
             uploadedRef.current.delete(fileId);
           }
         } catch (error) {
-          toast.error('附件上传失败');
+          attachments.remove(fileId);
+          toast.error(`附件 ${fileName} 上传失败，已从列表中移除`);
           console.warn(error);
           uploadedRef.current.delete(fileId);
         }
@@ -102,8 +102,8 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
       onSubmit={(message) =>
         sendMessage({
           content: message.text,
-          model: model.id,
-          provider: model.chefSlug,
+          model: model.model,
+          provider: model.provider,
           attachments: attachments.files.map<FileAttachment>((file) => {
             const meta = remoteMeta[file.id];
             return {
@@ -141,32 +141,32 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
       </PromptInputBody>
       <PromptInputFooter>
         <PromptInputTools>
-          <PromptInputActionMenu>
-            <PromptInputActionMenuTrigger />
-            <PromptInputActionMenuContent className="min-w-48">
-              <PromptInputActionAddAttachments
-                icon={<PaperclipIcon className="mr-2 size-4" />}
-                label="上传文件或图片"
-              />
-              <PromptInputActionAddScreenshot
-                icon={<CameraIcon className="mr-2 size-4" />}
-                label="屏幕截图"
-              />
-            </PromptInputActionMenuContent>
-          </PromptInputActionMenu>
-          <PromptInputButton>
-            <GlobeIcon size={16} />
-            <span>智能搜索</span>
-          </PromptInputButton>
           <ModelSelect
             model={model}
             onModelChange={setModel}
           />
         </PromptInputTools>
-        <PromptInputSubmit
-          disabled={isSending || isEmpty || attachments.files.length > MAX_ATTACHMENTS}
-          status={isSending ? 'submitted' : 'ready'}
-        />
+        <div className="flex items-center gap-1">
+          {model?.isMultiModal && (
+            <PromptInputActionMenu>
+              <PromptInputActionMenuTrigger>{/* <LinkIcon className="size-4" /> */}</PromptInputActionMenuTrigger>
+              <PromptInputActionMenuContent className="min-w-48">
+                <PromptInputActionAddAttachments
+                  icon={<PaperclipIcon className="mr-2 size-4" />}
+                  label="上传文件或图片"
+                />
+                <PromptInputActionAddScreenshot
+                  icon={<CameraIcon className="mr-2 size-4" />}
+                  label="屏幕截图"
+                />
+              </PromptInputActionMenuContent>
+            </PromptInputActionMenu>
+          )}
+          <PromptInputSubmit
+            disabled={isSending || isEmpty || attachments.files.length > MAX_ATTACHMENTS}
+            status={isSending ? 'submitted' : 'ready'}
+          />
+        </div>
       </PromptInputFooter>
     </PromptInput>
   );

@@ -103,13 +103,13 @@ export default function AiMessage({ message, isStreaming = false }: AiMessagePro
           <AvatarImage src="/robot.svg" />
         </Avatar>
         <MessageContent>
-          {reasoning && (
+          {(isStreaming || reasoning) && (
             <Reasoning
               autoClose={false}
               isStreaming={isStreaming}
               defaultOpen={true}>
               <ReasoningTrigger getThinkingMessage={getReasoningMessage} />
-              <ReasoningContent>{reasoning}</ReasoningContent>
+              <ReasoningContent>{reasoning ?? ''}</ReasoningContent>
             </Reasoning>
           )}
           {messageContent && (

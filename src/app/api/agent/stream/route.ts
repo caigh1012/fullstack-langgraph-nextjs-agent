@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
 
       if (attachments && attachments.length > 0) {
         const attachmentContents = await processAttachmentsForAI(attachments);
-        messageContent = [{ type: 'text', text: userContent }, ...attachmentContents];
+        messageContent = userContent
+          ? [{ type: 'text', text: userContent }, ...attachmentContents]
+          : [...attachmentContents];
       } else {
         messageContent = userContent;
       }

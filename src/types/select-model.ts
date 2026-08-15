@@ -4,7 +4,9 @@
 export interface SelectLLMModel {
   id: string;
   name: string;
-  chef: string;
-  chefSlug: string;
-  providers: string[];
+  group: string;
+  model: string;
+  provider: string;
+  // 是否支持多模态
+  isMultiModal: boolean;
 }

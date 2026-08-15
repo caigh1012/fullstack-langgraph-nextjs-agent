@@ -41,6 +41,17 @@ model Thread {
   @@index([userId])
 }
 
+model Model {
+  id           String  @id @default(uuid())
+  name         String
+  group        String
+  model        String
+  provider     String
+  isMultiModal Boolean
+
+  @@unique([model])
+}
+
 model MCPServer {
   id        String            @id @default(uuid())
   name      String            @unique
