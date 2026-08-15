@@ -6,10 +6,11 @@ import {
   USERNAME_MIN_LENGTH,
 } from '@/constants';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { registerUser } from '@/services/user/login.service';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { UserRegisterDto } from '@/types/dto/login.dto';
 
 const registerUserSchema = z.object({
   username: z
@@ -42,12 +43,12 @@ const registerUserSchema = z.object({
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body: UserRegisterDto = await request.json();
     const parsedBody = registerUserSchema.safeParse(body);
 
     // 校验参数
     if (!parsedBody.success) {
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { code: HttpBusinessCode.SUCCESS, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
         { status: HttpCode.BAD_REQUEST },
       );
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     const isSuccess = await registerUser(parsedBody.data);
 
     if (!isSuccess) {
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         {
           code: HttpBusinessCode.FAIL,
           message: HttpMessage.REGISTER_FAILED,
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     }
 
     // 注册成功
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       {
         code: HttpBusinessCode.SUCCESS,
         message: HttpMessage.REGISTER_SUCCESS,
@@ -80,8 +81,8 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       {
         code: HttpBusinessCode.FAIL,
         message: HttpMessage.INTERNAL_SERVER_ERROR,

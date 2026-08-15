@@ -1,12 +1,12 @@
 import { HttpBusinessCode } from '@/constants/http';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
-import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
+import { Thread } from '@/types/vo/thread.vo';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export interface UseThreadsReturn {
-  threads: ThreadVO[];
+  threads: Thread[];
   isLoadingThreads: boolean;
   threadError: Error | null;
   updateThread: (threadId: string, title: string) => Promise<void>;
@@ -23,87 +23,71 @@ export function useThreads(): UseThreadsReturn {
 
   // 获取 Thread 列表
   const fetchThreads = useCallback(async () => {
-    const response = await fetch('/api/agent/threads', {
-      method: 'GET',
-    });
-    if (!response.ok) {
-      let errorMessage = 'Failed to load threads';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      toast.error(errorMessage);
-      throw new Error(errorMessage);
+    try {
+      const response = await fetch('/api/agent/threads', {
+        method: 'GET',
+      });
+      const data = await response.json();
+      if (data.code === HttpBusinessCode.FAIL) {
+        throw new Error(data.message || '获取会话列表失败');
+      }
+      return data?.data;
+    } catch (error: unknown) {
+      toast.error((error as { message?: string })?.message || '获取会话列表失败');
     }
-    const data = await response.json();
-    if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || 'Failed to load threads');
-      throw new Error(data.message || 'Failed to load threads');
-    }
-    return data?.data;
   }, []);
 
   // 添加 Thread
   const createThread = useCallback(async (threadId: string, title?: string): Promise<void> => {
-    const response = await fetch('/api/agent/threads', {
-      method: 'POST',
-      body: JSON.stringify({ threadId, title: title?.substring(0, 100) || '新会话' }),
-    });
-    if (!response.ok) {
-      let errorMessage = 'Failed to load threads';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      toast.error(errorMessage);
-      throw new Error(errorMessage);
-    }
-    const data = await response.json();
-    if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || '创建会话失败');
-      throw new Error(data.message || '创建会话失败');
+    try {
+      const response = await fetch('/api/agent/threads', {
+        method: 'POST',
+        body: JSON.stringify({ threadId, title: title?.substring(0, 100) || '新会话' }),
+      });
+      const data = await response.json();
+      if (data.code === HttpBusinessCode.FAIL) {
+        throw new Error(data.message || '创建会话失败');
+      }
+    } catch (error: unknown) {
+      toast.error((error as { message?: string })?.message || '创建会话失败');
     }
   }, []);
 
   // 修改 Thread 标题
   const updateThread = useCallback(async (threadId: string, title: string): Promise<void> => {
-    const response = await fetch('/api/agent/threads', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ threadId, title }),
-    });
-    if (!response.ok) {
-      let errorMessage = '修改会话失败';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      toast.error(errorMessage);
-      throw new Error(errorMessage);
-    }
-    const data = await response.json();
-    if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || '修改会话失败');
-      throw new Error(data.message || '修改会话失败');
+    try {
+      const response = await fetch('/api/agent/threads', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ threadId, title }),
+      });
+      const data = await response.json();
+      if (data.code === HttpBusinessCode.FAIL) {
+        throw new Error(data.message || '修改会话失败');
+      }
+    } catch (error: unknown) {
+      toast.error((error as { message?: string })?.message || '修改会话失败');
     }
   }, []);
 
   // 删除 Thread
   const deleteThread = useCallback(async (threadId: string): Promise<void> => {
-    const response = await fetch('/api/agent/threads', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ threadId }),
-    });
-    if (!response.ok) {
-      let errorMessage = '删除会话失败';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      toast.error(errorMessage);
-      throw new Error(errorMessage);
-    }
-    const data = await response.json();
-    if (data.code === HttpBusinessCode.FAIL) {
-      toast.error(data.message || '删除会话失败');
-      throw new Error(data.message || '删除会话失败');
+    try {
+      const response = await fetch('/api/agent/threads', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ threadId }),
+      });
+      const data = await response.json();
+      if (data.code === HttpBusinessCode.FAIL) {
+        throw new Error(data.message || '删除会话失败');
+      }
+    } catch (error: unknown) {
+      toast.error((error as { message?: string })?.message || '删除会话失败');
     }
   }, []);
 
@@ -115,7 +99,7 @@ export function useThreads(): UseThreadsReturn {
     isLoading: isLoadingThreads,
     error: threadError,
     refetch: refetchThreadsQuery,
-  } = useQuery<ThreadVO[]>({
+  } = useQuery<Thread[]>({
     queryKey: ['threads'],
     queryFn: () => fetchThreads(),
   });

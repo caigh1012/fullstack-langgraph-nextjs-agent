@@ -3,7 +3,7 @@ import 'server-only';
 import { nanoid } from 'nanoid';
 import { NICKNAME_LENGTH } from '@/constants';
 import prisma from '@/lib/database/prisma';
-import { LoginBo, RegisterUserBo } from '@/pojo/bo/user/login.bo';
+import { UserLoginBo, UserRegisterBo } from '@/types/bo/login.bo';
 
 const USER_ID_RETRY_LIMIT = 3;
 const NICKNAME_PREFIX = 'user_';
@@ -42,68 +42,60 @@ function createNickname() {
 /**
  * 注册用户
  */
-export async function registerUser(bo: RegisterUserBo): Promise<boolean> {
-  try {
-    const username = bo.username.trim();
-    const email = bo.email?.trim() || null;
-    const avatarUrl = bo.avatarUrl?.trim() || null;
+export async function registerUser(bo: UserRegisterBo): Promise<boolean> {
+  const username = bo.username.trim();
+  const email = bo.email?.trim() || null;
+  const avatarUrl = bo.avatarUrl?.trim() || null;
 
-    const existingUserByUsername = await prisma.user.findUnique({
-      where: {
-        username,
-      },
-      select: {
-        id: true,
-      },
-    });
+  const existingUserByUsername = await prisma.user.findUnique({
+    where: {
+      username,
+    },
+    select: {
+      id: true,
+    },
+  });
 
-    if (existingUserByUsername) {
-      return false;
-    }
-
-    await prisma.user.create({
-      data: {
-        id: await createUniqueUserId(),
-        username,
-        nickname: createNickname(),
-        email,
-        password: bo.password,
-        gender: bo.gender ?? 'UNKNOWN',
-        avatarUrl,
-      },
-      select: {
-        id: true,
-        username: true,
-        nickname: true,
-        email: true,
-        gender: true,
-        avatarUrl: true,
-      },
-    });
-
-    return true;
-  } catch (error) {
-    throw error;
+  if (existingUserByUsername) {
+    return false;
   }
+
+  await prisma.user.create({
+    data: {
+      id: await createUniqueUserId(),
+      username,
+      nickname: createNickname(),
+      email,
+      password: bo.password,
+      gender: bo.gender ?? 'UNKNOWN',
+      avatarUrl,
+    },
+    select: {
+      id: true,
+      username: true,
+      nickname: true,
+      email: true,
+      gender: true,
+      avatarUrl: true,
+    },
+  });
+
+  return true;
 }
 
 /**
  * 登录用户
  */
-export async function userLogin(bo: LoginBo) {
-  try {
-    const { username } = bo;
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: {
-        id: true,
-        username: true,
-        nickname: true,
-        password: true,
-      },
-    });
-    return user;
-  } catch (error) {
-    throw error;
-  }
+export async function userLogin(bo: UserLoginBo) {
+  const { username } = bo;
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      nickname: true,
+      password: true,
+    },
+  });
+  return user;
 }

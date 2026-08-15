@@ -24,12 +24,12 @@ import {
 import { CameraIcon, PaperclipIcon } from 'lucide-react';
 import { MAX_ATTACHMENTS } from '@/constants';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
-import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
-import { FileAttachment } from '@/types/messages';
+import { Message } from '@/types/common/message';
 import { toast } from 'sonner';
+import { FileAttachment } from '@/types/dto/message.dto';
 
 interface MessageInputProps {
-  sendMessage: (message: MessageStreamDto) => Promise<void>;
+  sendMessage: (message: Message) => Promise<void>;
   isSending: boolean;
 }
 

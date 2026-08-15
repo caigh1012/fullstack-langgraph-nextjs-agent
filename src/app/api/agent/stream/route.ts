@@ -2,8 +2,8 @@ import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { ensureAgent } from '@/lib/agent';
 import { withAuth } from '@/lib/auth/with-auth';
 import { processAttachmentsForAI } from '@/lib/minio/content';
-import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
+import { MessageDto } from '@/types/dto/message.dto';
 import { generateThreadId } from '@/utils/generate-thread-id';
 import { HumanMessage } from '@langchain/core/messages';
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,13 +16,7 @@ export async function POST(req: NextRequest) {
     return await withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const body = await req.json();
-      const {
-        threadId,
-        content: userContent,
-        model,
-        provider,
-        attachments,
-      } = body as MessageStreamDto & { threadId: string };
+      const { threadId, content: userContent, model, provider, attachments } = body as MessageDto;
 
       if (!threadId) throw new Error('threadId is required');
 
@@ -60,7 +54,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     // 处理错误
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

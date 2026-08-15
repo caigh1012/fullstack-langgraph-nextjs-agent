@@ -3,7 +3,7 @@ import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 import { detectOAuthRequirement, isTokenExpired, OAuthStatus } from '@/lib/mcp/oauth-detection';
 import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { getMCPHttpServer, updateServerOAuthStatus } from '@/services/mcp/mcp.service';
 import {
   discoverAuthorizationServerMetadata,
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ serv
       if (server.oauthStatus === OAuthStatus.CONNECTED && server.authTokens) {
         const tokens = server.authTokens as { expires_at?: number };
         if (!isTokenExpired(tokens)) {
-          return NextResponse.json<ResultVO<CheckOAuthResponse>>(
+          return NextResponse.json<Result<CheckOAuthResponse>>(
             {
               data: {
                 serverId,
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ serv
       // 无需OAuth认证
       if (!detection.requiresAuth) {
         await updateServerOAuthStatus(serverId, userId, OAuthStatus.NOT_REQUIRED);
-        return NextResponse.json<ResultVO<CheckOAuthResponse>>(
+        return NextResponse.json<Result<CheckOAuthResponse>>(
           {
             data: {
               serverId,
@@ -176,7 +176,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ serv
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       {
         code: HttpBusinessCode.FAIL,
         message: error instanceof Error ? error.message : HttpMessage.INTERNAL_SERVER_ERROR,

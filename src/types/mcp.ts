@@ -1,8 +1,3 @@
-export enum MCPServerType {
-  stdio = 'stdio',
-  http = 'http',
-}
-
 export interface MCPTool {
   name: string;
   description?: string;

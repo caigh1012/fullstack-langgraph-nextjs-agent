@@ -1,11 +1,11 @@
 import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { HttpBusinessCode } from '@/constants/http';
-import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
 import { AIMessageData, MessageResponse, ToolCall } from '@/types/messages';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStream, FetchStreamTransport } from '@langchain/langgraph-sdk/react';
 import { toast } from 'sonner';
+import { Message } from '@/types/common/message';
 
 export interface UseChatMessageReturn {
   messages: MessageResponse[];
@@ -207,7 +207,7 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
    * 发送消息
    */
   const sendMessage = useCallback(
-    async (message: MessageStreamDto) => {
+    async (message: Message) => {
       if (!threadId) return;
 
       const tempId = `temp-${Date.now()}`;

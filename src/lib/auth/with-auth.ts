@@ -1,7 +1,7 @@
 import { TOKEN_COOKIE_KEY } from '@/constants';
 import { HttpCode } from '@/constants/http';
 import { HttpBusinessCode, HttpMessage } from '@/constants/http';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { JsonWebTokenError, JwtPayload, TokenExpiredError } from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from './jwt';
@@ -14,7 +14,7 @@ export const withAuth = async (req: NextRequest, handler: (payload: JwtPayload) 
 
     // 若 payload 不存在，返回 401
     if (!payload) {
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { code: HttpBusinessCode.FAIL, message: HttpMessage.TOKEN_INVALID, data: null },
         { status: HttpCode.UNAUTHORIZED },
       );
@@ -24,14 +24,14 @@ export const withAuth = async (req: NextRequest, handler: (payload: JwtPayload) 
     return await handler(payload);
   } catch (error) {
     if (error instanceof TokenExpiredError) {
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { code: HttpBusinessCode.FAIL, message: HttpMessage.TOKEN_EXPIRED, data: null },
         { status: HttpCode.UNAUTHORIZED },
       );
     }
 
     if (error instanceof JsonWebTokenError) {
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { code: HttpBusinessCode.FAIL, message: HttpMessage.TOKEN_INVALID, data: null },
         { status: HttpCode.UNAUTHORIZED },
       );

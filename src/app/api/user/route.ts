@@ -2,9 +2,11 @@ import { z } from 'zod';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { EMAIL_REGEX } from '@/constants';
 import { withAuth } from '@/lib/auth/with-auth';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { getUserInfo, updateUser } from '@/services/user/user.service';
 import { NextRequest, NextResponse } from 'next/server';
+import { UserInfo } from '@/types/vo/user.vo';
+import { UpdateUserDto } from '@/types/dto/user.dto';
 
 /**
  * 获取用户信息
@@ -14,14 +16,14 @@ export async function GET(req: NextRequest) {
     return withAuth(req, async (payload) => {
       const { sub, username } = payload;
       const user = await getUserInfo({ id: sub as string, username });
-      return NextResponse.json(
+      return NextResponse.json<Result<UserInfo>>(
         { data: user, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -45,12 +47,12 @@ export async function PUT(req: NextRequest) {
   try {
     return withAuth(req, async (payload) => {
       const { sub, username } = payload;
-      const body = await req.json();
+      const body: UpdateUserDto = await req.json();
 
       const parsed = updateUserSchema.safeParse(body);
 
       if (!parsed.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           {
             code: HttpBusinessCode.FAIL,
             message: HttpMessage.PARAM_VALIDATION_ERROR,
@@ -64,7 +66,7 @@ export async function PUT(req: NextRequest) {
         id: sub as string,
         username,
         ...parsed.data,
-        avatarUrl: body.avatarUrl || null,
+        avatarUrl: body.avatarUrl || undefined,
         gender: body.gender || 'UNKNOWN',
       });
 
@@ -74,8 +76,8 @@ export async function PUT(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

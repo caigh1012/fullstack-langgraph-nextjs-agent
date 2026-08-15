@@ -1,6 +1,5 @@
 'use client';
 
-import { MCPServerType } from '@/types/mcp';
 import { Edit, Globe, Link2, Loader2, Plus, RefreshCcw, Server, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { OAuthStatusBadge, OAuthStatusType } from './oauth-status-badge';
@@ -21,23 +20,7 @@ import {
 import { toast } from 'sonner';
 import { HttpBusinessCode } from '@/constants/http';
 import { OAuthStatus } from '@/lib/mcp/oauth-detection';
-
-interface MCPServer {
-  id: string;
-  name: string;
-  type: MCPServerType;
-  enabled: boolean;
-  command?: string;
-  args?: unknown[];
-  env?: Record<string, string>;
-  url?: string;
-  headers?: Record<string, string>;
-  // OAuth fields
-  requiresAuth?: boolean;
-  oauthStatus?: OAuthStatusType;
-  createdAt: string;
-  updatedAt: string;
-}
+import { MCPServer } from '@/types/vo/mcp.vo';
 
 interface MCPServerListProps {
   isOpen: boolean;

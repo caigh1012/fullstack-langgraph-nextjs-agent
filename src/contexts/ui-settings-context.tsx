@@ -1,11 +1,11 @@
-import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants/models';
-import { SelectLLMModel } from '@/types/select-model';
+import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants';
+import { Model } from '@/types/entity/model.entity';
 import { createContext, useContext } from 'react';
 import { useLocalStorage } from 'react-use';
 
 const STORAGE_KEY = 'model_settings';
 
-const defaultModels: SelectLLMModel = {
+const defaultModels: Model = {
   id: 'deepseek-v4-pro',
   group: 'DeepSeek',
   model: DEFAULT_MODEL_NAME,
@@ -15,8 +15,8 @@ const defaultModels: SelectLLMModel = {
 };
 
 export interface UISettingContextType {
-  model: SelectLLMModel;
-  setModel: (model: SelectLLMModel) => void;
+  model: Model;
+  setModel: (model: Model) => void;
 }
 
 export const UISettingContext = createContext<UISettingContextType>({
@@ -25,7 +25,7 @@ export const UISettingContext = createContext<UISettingContextType>({
 });
 
 export function UISettingContextProvider({ children }: { children: React.ReactNode }) {
-  const [model, setModel] = useLocalStorage<SelectLLMModel>(STORAGE_KEY, defaultModels);
+  const [model, setModel] = useLocalStorage<Model>(STORAGE_KEY, defaultModels);
 
   return (
     <UISettingContext.Provider value={{ model: model || defaultModels, setModel }}>

@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { MCPToolsData } from '@/types/mcp';
+import { toast } from 'sonner';
 
-async function fetchMCPTools(): Promise<MCPToolsData> {
-  const response = await fetch('/api/mcp-tools');
-  if (!response.ok) {
-    throw new Error('Failed to fetch MCP tools');
+async function fetchMCPTools() {
+  try {
+    const response = await fetch('/api/mcp-tools');
+    if (!response.ok) {
+      throw new Error('Failed to fetch MCP tools');
+    }
+    return await response.json();
+  } catch (error: unknown) {
+    toast.error((error as { message?: string })?.message || '获取 MCP tools 失败');
   }
-  return response.json();
 }
 
 export function useMCPTools() {

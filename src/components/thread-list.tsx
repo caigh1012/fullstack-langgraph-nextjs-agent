@@ -32,7 +32,7 @@ import {
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Spinner } from './ui/spinner';
-import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
+import { Thread } from '@/types/vo/thread.vo';
 
 /**
  * 会话列表组件
@@ -82,7 +82,7 @@ export function ThreadList() {
     setDeleting(true);
     try {
       await deleteThread(pendingDeleteId);
-      queryClient.setQueryData(['threads'], (old: ThreadVO[] = []) =>
+      queryClient.setQueryData(['threads'], (old: Thread[] = []) =>
         old.filter((thread) => thread.id !== pendingDeleteId),
       );
       queryClient.removeQueries({ queryKey: ['messages', pendingDeleteId] });

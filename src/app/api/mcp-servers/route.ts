@@ -1,6 +1,6 @@
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { createMCPServer, deleteMCPServer, getMCPServerList, updateMCPServer } from '@/services/mcp/mcp.service';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -59,21 +59,21 @@ export async function POST(req: NextRequest) {
 
       const result = createMCPServerSchema.safeParse(body);
       if (!result.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           { code: HttpBusinessCode.FAIL, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
           { status: HttpCode.BAD_REQUEST },
         );
       }
 
       const server = await createMCPServer(userId, result.data);
-      return NextResponse.json<ResultVO<unknown>>(
+      return NextResponse.json<Result<unknown>>(
         { data: server, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -116,7 +116,7 @@ export async function PATCH(req: NextRequest) {
 
       const result = updateMCPServerSchema.safeParse(body);
       if (!result.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           { code: HttpBusinessCode.FAIL, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
           { status: HttpCode.BAD_REQUEST },
         );
@@ -124,14 +124,14 @@ export async function PATCH(req: NextRequest) {
 
       const { id, ...data } = result.data;
       const server = await updateMCPServer(id, userId, data);
-      return NextResponse.json<ResultVO<unknown>>(
+      return NextResponse.json<Result<unknown>>(
         { data: server, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -153,21 +153,21 @@ export async function DELETE(req: NextRequest) {
 
       const result = deleteMCPServerSchema.safeParse(body);
       if (!result.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           { code: HttpBusinessCode.FAIL, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
           { status: HttpCode.BAD_REQUEST },
         );
       }
 
       await deleteMCPServer(result.data.id, userId);
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { data: null, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

@@ -50,12 +50,6 @@ export default function UserInfoPage() {
       }),
     });
 
-    if (!response.ok) {
-      let errorMessage = '更新用户信息失败';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      throw new Error(errorMessage);
-    }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
       throw new Error(data.message || '更新用户信息失败');
@@ -69,7 +63,7 @@ export default function UserInfoPage() {
       refreshUserInfo();
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(error.message || '更新用户信息失败');
     },
   });
 

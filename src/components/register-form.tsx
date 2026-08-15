@@ -59,13 +59,6 @@ export default function RegisterForm() {
         email: values.email || undefined,
       }),
     });
-
-    if (!response.ok) {
-      let errorMessage = 'Failed to register';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      throw new Error(errorMessage);
-    }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
       throw new Error(data.message || '注册失败');
@@ -79,7 +72,7 @@ export default function RegisterForm() {
       toast.success('注册成功');
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(error.message || '注册失败');
     },
   });
 

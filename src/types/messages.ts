@@ -9,7 +9,7 @@ export interface MessageResponse {
 export interface BasicMessageData {
   id: string;
   content: string;
-  attachments?: FileAttachment[];
+  // attachments?: FileAttachment[];
 }
 
 export interface AIMessageData {
@@ -31,14 +31,6 @@ export interface ContentItem {
 export interface FunctionCall {
   name: string;
   args: Record<string, unknown>;
-}
-
-export interface FileAttachment {
-  url: string;
-  key: string;
-  name: string;
-  type: string;
-  size: number;
 }
 
 export interface ContentItem {

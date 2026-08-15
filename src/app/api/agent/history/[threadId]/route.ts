@@ -1,6 +1,6 @@
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { fetchThreadHistory } from '@/services/message/message.service';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -21,14 +21,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ thre
 
       const messages = await fetchThreadHistory(userId, threadId);
 
-      return NextResponse.json<ResultVO<typeof messages>>(
+      return NextResponse.json<Result<typeof messages>>(
         { data: messages, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

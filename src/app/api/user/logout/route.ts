@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { TOKEN_COOKIE_KEY } from '@/constants';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 
@@ -12,7 +12,7 @@ import { withAuth } from '@/lib/auth/with-auth';
 export async function POST(req: NextRequest) {
   try {
     return withAuth(req, async () => {
-      const response = NextResponse.json<ResultVO<null>>(
+      const response = NextResponse.json<Result<null>>(
         {
           message: HttpMessage.LOGOUT_SUCCESS,
           data: null,
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
       return response;
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

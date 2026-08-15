@@ -1,6 +1,6 @@
 import { HttpBusinessCode } from '@/constants/http';
 
-export interface ResultVO<T> {
+export interface Result<T> {
   message: string;
   code: HttpBusinessCode;
   data: T;

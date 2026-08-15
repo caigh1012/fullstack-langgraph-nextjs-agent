@@ -1,7 +1,7 @@
 /**
- * 选择的LLM模型
+ * 模型实体
  */
-export interface SelectLLMModel {
+export interface Model {
   id: string;
   name: string;
   group: string;

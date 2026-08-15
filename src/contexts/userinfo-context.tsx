@@ -1,21 +1,10 @@
 'use client';
 
 import { HttpBusinessCode } from '@/constants/http';
+import { UserInfo } from '@/types/vo/user.vo';
 import { redirect } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-
-/**
- * 存储用户信息
- */
-interface UserInfo {
-  id: string;
-  username: string;
-  nickname: string;
-  email?: string;
-  avatarUrl?: string;
-  gender: string;
-}
 
 export interface UserInfoContextType {
   userInfo: UserInfo | null;

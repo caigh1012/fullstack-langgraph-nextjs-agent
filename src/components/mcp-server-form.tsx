@@ -1,4 +1,3 @@
-import { MCPServerType } from '@/types/mcp';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -6,18 +5,7 @@ import { Check, Loader2, Wand2, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HttpBusinessCode } from '@/constants/http';
 import { toast } from 'sonner';
-
-interface MCPServer {
-  id?: string;
-  name: string;
-  type: MCPServerType;
-  enabled: boolean;
-  command?: string;
-  args?: unknown[];
-  env?: Record<string, string>;
-  url?: string;
-  headers?: Record<string, string>;
-}
+import { MCPServer, MCPServerType } from '@/types/vo/mcp.vo';
 
 interface MCPServerFormProps {
   isOpen: boolean; // 是否显示表单
@@ -93,7 +81,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
     try {
       const parsed = JSON.parse(jsonString);
       if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') {
-        setValidationError('Invalid format: missing mcpServers object');
+        setValidationError('缺少 mcpServers 对象');
         setIsValidJson(false);
         return false;
       }
@@ -101,8 +89,8 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
       setIsValidJson(true);
       return true;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Invalid JSON';
-      setValidationError(`JSON Syntax Error: ${errorMsg}`);
+      const errorMsg = err instanceof Error ? err.message : ' JSON 格式错误：无效的 JSON 字符串';
+      setValidationError(`JSON 格式错误: ${errorMsg}`);
       setIsValidJson(false);
       return false;
     }
@@ -172,7 +160,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
       const parsed = JSON.parse(jsonInput);
 
       if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') {
-        throw new Error('Invalid format: missing mcpServers object');
+        throw new Error('缺少 mcpServers 对象');
       }
 
       const serverEntries = Object.entries(parsed.mcpServers);
@@ -211,13 +199,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
           body: JSON.stringify(body),
         });
 
-        let errorMessage = server ? 'MCP Server Edit Failed' : 'MCP Server Save Failed';
-
-        if (!response.ok) {
-          const errorBody = await response.json();
-          errorMessage = errorBody.message || errorBody.error || errorMessage;
-          throw new Error(errorMessage);
-        }
+        const errorMessage = server ? '编辑 MCP 配置失败' : '添加 MCP 配置失败';
 
         const data = await response.json();
         if (data.code === HttpBusinessCode.FAIL) {
@@ -229,6 +211,7 @@ export default function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPS
       toast.success('配置保存成功');
       onClose();
     } catch (err) {
+      toast.error(err instanceof Error ? err.message : '保存配置失败');
       setError(err instanceof Error ? err.message : '保存配置失败');
     } finally {
       setSaving(false);

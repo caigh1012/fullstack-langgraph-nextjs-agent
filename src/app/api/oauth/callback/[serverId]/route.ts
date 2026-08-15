@@ -1,7 +1,7 @@
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { getMCPHttpServer, updateMcpHttpServer } from '@/services/mcp/mcp.service';
 import { getAppUrl } from '@/utils/get-url';
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ serv
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
 
-      // Handle OAuth errors
+      // 处理 OAuth 错误
       if (error) {
         console.error('OAuth error:', error, errorDescription);
         return NextResponse.redirect(new URL(`/?oauth_error=${encodeURIComponent(errorDescription || error)}`, appUrl));
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ serv
         return NextResponse.redirect(new URL('/?oauth_error=missing_code', appUrl));
       }
 
-      // Fetch server from database
+      // 从数据库获取服务器
       const server = await getMCPHttpServer(serverId, userId);
       if (!server || !server.url) {
         return NextResponse.redirect(new URL('/?oauth_error=server_not_found', appUrl));
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ serv
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       {
         code: HttpBusinessCode.FAIL,
         message: error instanceof Error ? error.message : HttpMessage.INTERNAL_SERVER_ERROR,

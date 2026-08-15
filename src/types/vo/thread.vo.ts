@@ -1,7 +1,4 @@
-/**
- * Thread 对象
- */
-export interface ThreadVO {
+export interface Thread {
   id: string;
   title?: string;
   createdAt: string;

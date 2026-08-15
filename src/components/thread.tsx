@@ -7,7 +7,7 @@ import { useChatMessage } from '@/hooks/use-chat-message';
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 import { useFirstMessageContext } from '@/contexts/first-message-context';
-import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
+import { Message } from '@/types/common/message';
 
 interface ThreadProps {
   threadId?: string;
@@ -22,7 +22,7 @@ export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
    * 处理输入的消息，如果是第一个消息，先进行存储调用 onFirstMessageSent 回调函数
    */
   const handleMessageSent = useCallback(
-    async (message: MessageStreamDto) => {
+    async (message: Message) => {
       const wasEmpty = messages.length === 0;
       // 如果没有 threadId，且是第一个消息，调用 onFirstMessageSent 回调函数
       if (wasEmpty && onFirstMessageSent) {

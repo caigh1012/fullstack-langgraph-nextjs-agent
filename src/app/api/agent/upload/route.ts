@@ -5,7 +5,7 @@ import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 import { CHAT_BUCKET_NAME } from '@/lib/minio/client';
 import { uploadFile } from '@/lib/minio/upload';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { isValidTextContent, validateFile } from '@/lib/minio/validation';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
       // 1. 校验 file 是否存在
       if (!file) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           {
             code: HttpBusinessCode.FAIL,
             message: HttpMessage.PARAM_VALIDATION_ERROR,
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         const extension = file.name.split('.').pop()?.toLowerCase() || '';
         if (['md', 'markdown', 'txt'].includes(extension)) {
           if (!isValidTextContent(buffer)) {
-            return NextResponse.json<ResultVO<null>>(
+            return NextResponse.json<Result<null>>(
               {
                 data: null,
                 code: HttpBusinessCode.FAIL,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         contentType: file.type,
       });
 
-      return NextResponse.json<ResultVO<{ url: string; key: string }>>(
+      return NextResponse.json<Result<{ url: string; key: string }>>(
         {
           code: HttpBusinessCode.SUCCESS,
           message: HttpMessage.REQUEST_SUCCESS,
@@ -88,8 +88,8 @@ export async function POST(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

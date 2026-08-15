@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
 import { AVATAR_BUCKET_NAME, buildMinioObjectUrl, minioClient } from '@/lib/minio/client';
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
       // 1. 校验 file 是否存在
       if (!file) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           {
             code: HttpBusinessCode.FAIL,
             message: HttpMessage.PARAM_VALIDATION_ERROR,
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       const fileName = file.name || '';
       const extension = fileName.split('.').pop()?.toLowerCase() ?? '';
       if (!ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           {
             code: HttpBusinessCode.FAIL,
             message: '仅支持上传图片文件',
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
       // 3. 校验文件大小
       if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           {
             code: HttpBusinessCode.FAIL,
             message: '文件大小不能超过 2MB',
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
       await minioClient.putObject(AVATAR_BUCKET_NAME, objectName, buffer, file.size, { 'Content-Type': file.type });
 
-      return NextResponse.json<ResultVO<{ url: string }>>(
+      return NextResponse.json<Result<{ url: string }>>(
         {
           code: HttpBusinessCode.SUCCESS,
           message: HttpMessage.REQUEST_SUCCESS,
@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

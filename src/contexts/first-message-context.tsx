@@ -1,15 +1,15 @@
-import { MessageStreamDto } from '@/pojo/dto/agent/stream.dto';
+import { Message } from '@/types/common/message';
 import React, { createContext, useContext, useState } from 'react';
 
 export interface FirstMessageContextType {
-  firstMessage: MessageStreamDto | null;
-  setFirstMessage: (message: MessageStreamDto | null) => void;
+  firstMessage: Message | null;
+  setFirstMessage: (message: Message | null) => void;
 }
 
 const FirstMessageContext = createContext<FirstMessageContextType | null>(null);
 
 export function FirstMessageProvider({ children }: { children: React.ReactNode }) {
-  const [firstMessage, setFirstMessage] = useState<MessageStreamDto | null>(null);
+  const [firstMessage, setFirstMessage] = useState<Message | null>(null);
 
   return (
     <FirstMessageContext.Provider value={{ firstMessage, setFirstMessage }}>{children}</FirstMessageContext.Provider>

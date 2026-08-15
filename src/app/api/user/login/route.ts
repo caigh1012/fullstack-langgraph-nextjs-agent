@@ -11,8 +11,9 @@ import {
 } from '@/constants';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { userLogin } from '@/services/user/login.service';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
+import { Result } from '@/types/common/result';
 import { generateToken } from '@/lib/auth/jwt';
+import { UserLoginDto } from '@/types/dto/login.dto';
 
 const loginSchema = z.object({
   username: z
@@ -32,12 +33,12 @@ const loginSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body: UserLoginDto = await request.json();
     const result = loginSchema.safeParse(body);
 
     // 校验参数
     if (!result.success) {
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { code: HttpBusinessCode.SUCCESS, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
         { status: HttpCode.BAD_REQUEST },
       );
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     const token = generateToken({ sub: user.id.toString(), username: user.username });
 
     // 请求成功
-    const response = NextResponse.json<ResultVO<null>>(
+    const response = NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS, data: null },
       { status: HttpCode.SUCCESS },
     );
@@ -76,8 +77,8 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

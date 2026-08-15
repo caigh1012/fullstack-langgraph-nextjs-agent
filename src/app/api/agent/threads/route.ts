@@ -1,9 +1,9 @@
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
-import { ResultVO } from '@/pojo/vo/common/result.vo';
-import { ThreadVO } from '@/pojo/vo/thread/thread.vo';
+import { Result } from '@/types/common/result';
 import { createThread, getThreadList, updateThread, deleteThread } from '@/services/thread/thread.service';
 import { NextRequest, NextResponse } from 'next/server';
+import { Thread } from '@/types/vo/thread.vo';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -21,21 +21,21 @@ export async function GET(req: NextRequest) {
 
       const threads = await getThreadList(userId);
 
-      const threadVOs = threads.map((thread) => ({
+      const threadList = threads.map((thread) => ({
         id: thread.id,
         title: thread.title,
         createdAt: thread.createdAt.toISOString(),
         updatedAt: thread.updatedAt.toISOString(),
       }));
 
-      return NextResponse.json<ResultVO<ThreadVO[]>>(
-        { data: threadVOs, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
+      return NextResponse.json<Result<Thread[]>>(
+        { data: threadList, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
-    console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    console.error(error);
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       const result = threadCreateSchema.safeParse(body);
 
       if (!result.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           { code: HttpBusinessCode.FAIL, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
           { status: HttpCode.BAD_REQUEST },
         );
@@ -71,14 +71,14 @@ export async function POST(req: NextRequest) {
 
       await createThread(threadId, title, userId);
 
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { data: null, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -104,7 +104,7 @@ export async function PATCH(req: NextRequest) {
       const result = threadUpdateSchema.safeParse(body);
 
       if (!result.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           { code: HttpBusinessCode.FAIL, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
           { status: HttpCode.BAD_REQUEST },
         );
@@ -114,14 +114,14 @@ export async function PATCH(req: NextRequest) {
 
       await updateThread(threadId, title, userId);
 
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { data: null, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
@@ -146,7 +146,7 @@ export async function DELETE(req: NextRequest) {
       const result = threadDeleteSchema.safeParse(body);
 
       if (!result.success) {
-        return NextResponse.json<ResultVO<null>>(
+        return NextResponse.json<Result<null>>(
           { code: HttpBusinessCode.FAIL, message: HttpMessage.PARAM_VALIDATION_ERROR, data: null },
           { status: HttpCode.BAD_REQUEST },
         );
@@ -156,14 +156,14 @@ export async function DELETE(req: NextRequest) {
 
       await deleteThread(threadId, userId);
 
-      return NextResponse.json<ResultVO<null>>(
+      return NextResponse.json<Result<null>>(
         { data: null, code: HttpBusinessCode.SUCCESS, message: HttpMessage.REQUEST_SUCCESS },
         { status: HttpCode.SUCCESS },
       );
     });
   } catch (error) {
     console.log(error);
-    return NextResponse.json<ResultVO<null>>(
+    return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
     );

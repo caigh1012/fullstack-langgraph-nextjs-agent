@@ -42,12 +42,6 @@ export default function LoginForm() {
       },
       body: JSON.stringify(values),
     });
-    if (!response.ok) {
-      let errorMessage = 'Failed to login';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      throw new Error(errorMessage);
-    }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
       throw new Error(data.message || '登录失败');
@@ -61,7 +55,7 @@ export default function LoginForm() {
       toast.success('登录成功');
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error(error.message || '登录失败');
     },
   });
 
