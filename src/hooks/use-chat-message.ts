@@ -1,6 +1,6 @@
 import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { HttpBusinessCode } from '@/constants/http';
-import { AIMessageData, MessageResponse, ToolCall } from '@/types/messages';
+import { AIMessageData, MessageResponse, ToolCall } from '@/types/vo/message.vo';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStream, FetchStreamTransport } from '@langchain/langgraph-sdk/react';
@@ -23,6 +23,8 @@ interface UseChatMessageProps {
 
 export function useChatMessage({ threadId }: UseChatMessageProps) {
   const currentMessageRef = useRef<MessageResponse | null>(null);
+  // 用于记录乐观插入的 AI 占位消息 id，首条真实 AI 消息到达时移除
+  const pendingAiIdRef = useRef<string | null>(null);
   const queryClient = useQueryClient();
 
   /**
@@ -94,10 +96,19 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
     threadId: threadId ?? null,
     onFinish: () => {
       currentMessageRef.current = null;
+      pendingAiIdRef.current = null;
     },
     onError: () => {
       toast.error('请求失败');
       currentMessageRef.current = null;
+      // 失败时也要清掉占位，避免一直转圈
+      const pendingId = pendingAiIdRef.current;
+      if (pendingId && threadId) {
+        queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) =>
+          old.filter((m) => !(m.type === 'ai' && m.data?.id === pendingId)),
+        );
+        pendingAiIdRef.current = null;
+      }
     },
   });
 
@@ -168,11 +179,17 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
 
     // 检查是否是新消息
     if (!currentMessageRef.current || currentMessageRef.current?.data?.id !== processedMessage.data?.id) {
-      currentMessageRef.current = processedMessage;
-      queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [
-        ...old,
-        currentMessageRef.current!,
-      ]);
+      // 真实 AI 首条到达：先把乐观插入的 AI 占位从缓存中剔除，再追加真实消息
+      const pendingId = pendingAiIdRef.current;
+      const realMessage = processedMessage;
+      currentMessageRef.current = realMessage;
+      queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => {
+        const filtered = pendingId ? old.filter((m) => !(m.type === 'ai' && m.data?.id === pendingId)) : old;
+        return [...filtered, realMessage];
+      });
+      if (pendingId) {
+        pendingAiIdRef.current = null;
+      }
     } else {
       const currentData = currentMessageRef.current.data as AIMessageData;
 
@@ -211,6 +228,7 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
       if (!threadId) return;
 
       const tempId = `temp-${Date.now()}`;
+      const aiTempId = `pending-ai-${Date.now()}`;
       const userMessage: MessageResponse = {
         type: 'human',
         data: {
@@ -220,8 +238,22 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
         },
       };
 
-      // 使用 queryClient 更新本地缓存
-      queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [...old, userMessage]);
+      // 乐观插入一条 AI 占位消息：让 AiMessage 立即渲染 “正在思考” UI，
+      // 直到 stream.messages 出现真实 AI 消息再被替换
+      const aiPlaceholder: MessageResponse = {
+        type: 'ai',
+        data: {
+          id: aiTempId,
+          content: '',
+        },
+      };
+
+      pendingAiIdRef.current = aiTempId;
+      queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => [
+        ...old,
+        userMessage,
+        aiPlaceholder,
+      ]);
 
       await stream.submit({
         threadId,

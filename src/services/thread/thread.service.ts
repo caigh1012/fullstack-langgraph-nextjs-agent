@@ -12,6 +12,18 @@ export async function getThreadList(userId: string) {
 }
 
 /**
+ * 根据 id 查询 Thread
+ */
+export async function findThreadById(threadId: string, userId: string) {
+  return await prisma.thread.findUnique({
+    where: {
+      id: threadId,
+      userId,
+    },
+  });
+}
+
+/**
  * 创建 Thread
  */
 export async function createThread(threadId: string, title: string, userId: string) {

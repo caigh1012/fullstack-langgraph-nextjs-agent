@@ -2,6 +2,7 @@ import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { ensureAgent } from '@/lib/agent';
 import { withAuth } from '@/lib/auth/with-auth';
 import { processAttachmentsForAI } from '@/lib/minio/content';
+import { createThread, findThreadById } from '@/services/thread/thread.service';
 import { Result } from '@/types/common/result';
 import { MessageDto } from '@/types/dto/message.dto';
 import { generateThreadId } from '@/utils/generate-thread-id';
@@ -19,6 +20,12 @@ export async function POST(req: NextRequest) {
       const { threadId, content: userContent, model, provider, attachments } = body as MessageDto;
 
       if (!threadId) throw new Error('threadId is required');
+
+      const existingThread = await findThreadById(threadId, userId);
+      if (!existingThread) {
+        const defaultTitle = userContent?.trim().slice(0, 50) || '新对话';
+        await createThread(threadId, defaultTitle, userId);
+      }
 
       let messageContent: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 
@@ -53,7 +60,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     // 处理错误
-    console.log(error);
+    console.error(error);
     return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },

@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ thre
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },

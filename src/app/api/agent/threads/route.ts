@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
@@ -120,7 +120,7 @@ export async function PATCH(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },
@@ -162,7 +162,7 @@ export async function DELETE(req: NextRequest) {
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return NextResponse.json<Result<null>>(
       { code: HttpBusinessCode.FAIL, message: HttpMessage.INTERNAL_SERVER_ERROR, data: null },
       { status: HttpCode.INTERNAL_SERVER_ERROR },

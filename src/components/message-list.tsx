@@ -1,6 +1,6 @@
-import { MessageResponse } from '@/types/messages';
 import HumanMessage from './human-message';
 import AiMessage from './ai-message';
+import { MessageResponse } from '@/types/vo/message.vo';
 
 interface MessageListProps {
   messages: MessageResponse[];

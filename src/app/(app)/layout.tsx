@@ -9,7 +9,7 @@ import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { LeftSidebar } from '@/components/left-sidebar';
 import { OAuthToast } from '@/components/oauth-toast';
-import { FirstMessageProvider } from '@/contexts/message-context';
+import { MessageContextProvider } from '@/contexts/message-context';
 import { UISettingContextProvider } from '@/contexts/ui-settings-context';
 import { Suspense } from 'react';
 
@@ -24,7 +24,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <UserInfoProvider>
       <UISettingContextProvider>
         <TooltipProvider>
-          <FirstMessageProvider>
+          <MessageContextProvider>
             <SidebarProvider>
               {/* 左边侧边栏 */}
               <LeftSidebar />
@@ -74,7 +74,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Suspense fallback={null}>
               <OAuthToast />
             </Suspense>
-          </FirstMessageProvider>
+          </MessageContextProvider>
         </TooltipProvider>
       </UISettingContextProvider>
     </UserInfoProvider>

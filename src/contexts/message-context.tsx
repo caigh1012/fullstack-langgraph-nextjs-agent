@@ -6,20 +6,18 @@ export interface MessageContextType {
   setFirstMessage: (message: Message | null) => void;
 }
 
-const FirstMessageContext = createContext<MessageContextType | null>(null);
+const MessageContext = createContext<MessageContextType | null>(null);
 
-export function FirstMessageProvider({ children }: { children: React.ReactNode }) {
+export function MessageContextProvider({ children }: { children: React.ReactNode }) {
   const [firstMessage, setFirstMessage] = useState<Message | null>(null);
 
-  return (
-    <FirstMessageContext.Provider value={{ firstMessage, setFirstMessage }}>{children}</FirstMessageContext.Provider>
-  );
+  return <MessageContext.Provider value={{ firstMessage, setFirstMessage }}>{children}</MessageContext.Provider>;
 }
 
 export function useMessageContext() {
-  const context = useContext(FirstMessageContext);
+  const context = useContext(MessageContext);
   if (!context) {
-    throw new Error('useMessageContext must be used within a MessageProvider');
+    throw new Error('useMessageContext must be used within a MessageContextProvider');
   }
   return context;
 }

@@ -10,7 +10,6 @@ export interface UseThreadsReturn {
   isLoadingThreads: boolean;
   threadError: Error | null;
   updateThread: (threadId: string, title: string) => Promise<void>;
-  createThread: (threadId: string, title?: string) => Promise<void>;
   deleteThread: (threadId: string) => Promise<void>;
   refetchThreads: () => Promise<unknown>;
 }
@@ -34,22 +33,6 @@ export function useThreads(): UseThreadsReturn {
       return data?.data;
     } catch (error: unknown) {
       toast.error((error as { message?: string })?.message || '获取会话列表失败');
-    }
-  }, []);
-
-  // 添加 Thread
-  const createThread = useCallback(async (threadId: string, title?: string): Promise<void> => {
-    try {
-      const response = await fetch('/api/agent/threads', {
-        method: 'POST',
-        body: JSON.stringify({ threadId, title: title?.substring(0, 100) || '新会话' }),
-      });
-      const data = await response.json();
-      if (data.code === HttpBusinessCode.FAIL) {
-        throw new Error(data.message || '创建会话失败');
-      }
-    } catch (error: unknown) {
-      toast.error((error as { message?: string })?.message || '创建会话失败');
     }
   }, []);
 
@@ -117,7 +100,6 @@ export function useThreads(): UseThreadsReturn {
     isLoadingThreads: isLoadingThreads,
     threadError: threadError as Error | null,
     updateThread,
-    createThread,
     deleteThread,
     refetchThreads: refetchThreadsQuery,
   };

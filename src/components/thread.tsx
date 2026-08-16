@@ -14,7 +14,7 @@ interface ThreadProps {
   onFirstMessageSent?: (title: string) => void;
 }
 
-export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
+export default function ThreadComponent({ threadId, onFirstMessageSent }: ThreadProps) {
   const { firstMessage, setFirstMessage } = useMessageContext();
   const { messages, isLoadingHistory, isPending, isSending, sendMessage } = useChatMessage({ threadId });
 
