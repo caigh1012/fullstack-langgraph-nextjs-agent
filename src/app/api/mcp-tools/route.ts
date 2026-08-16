@@ -1,32 +1,17 @@
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import type { OAuthClientProvider } from '@modelcontextprotocol/sdk/client/auth.js';
 import { withAuth } from '@/lib/auth/with-auth';
 import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
 import { OAuthStatus } from '@/lib/mcp/oauth-detection';
 import { getMCPServerList } from '@/services/mcp/mcp.service';
 import { NextRequest, NextResponse } from 'next/server';
-import { MCPToolsData, MCPToolsGrouped } from '@/types/mcp';
+import { MCPToolsData, MCPToolsGrouped } from '@/types/vo/mcp-tools.vo';
 import { sanitizeTool } from '@/lib/agent/util';
+import { HttpMCPServerConfig, MCPClientTool, MCPServersConfig, StdioMCPServerConfig } from '@/types/dto/mcp-tools.dto';
+import { Result } from '@/types/common/result';
+import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-interface StdioMCPServerConfig {
-  transport: 'stdio';
-  command: string;
-  args?: string[];
-  env?: Record<string, string>;
-}
-
-interface HttpMCPServerConfig {
-  transport: 'http';
-  url: string;
-  headers?: Record<string, string>;
-  authProvider?: OAuthClientProvider;
-}
-
-type MCPServerConfig = StdioMCPServerConfig | HttpMCPServerConfig;
-type MCPClientTool = Awaited<ReturnType<MultiServerMCPClient['getTools']>>[number];
 
 function createEmptyResponse(): MCPToolsData {
   return {
@@ -35,16 +20,17 @@ function createEmptyResponse(): MCPToolsData {
   };
 }
 
-async function getMCPServerConfigs(userId: string): Promise<Record<string, MCPServerConfig>> {
+async function getMCPServerConfigs(userId: string): Promise<MCPServersConfig> {
   try {
     const servers = (await getMCPServerList(userId)).filter((server) => server.enabled);
-    const configs: Record<string, MCPServerConfig> = {};
+    const configs: MCPServersConfig = {};
 
     for (const server of servers) {
       if (server.type === 'stdio' && server.command) {
         const config: StdioMCPServerConfig = {
           transport: 'stdio',
           command: server.command,
+          args: [],
         };
 
         if (server.args && Array.isArray(server.args)) {
@@ -99,8 +85,7 @@ async function createMCPClient(userId: string): Promise<MultiServerMCPClient | n
     }
 
     return new MultiServerMCPClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mcpServers: mcpServers as any,
+      mcpServers: mcpServers,
       throwOnLoadError: false,
       prefixToolNameWithServerName: true,
     });
@@ -163,16 +148,21 @@ export async function GET(req: NextRequest) {
     return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const tools = await getMCPTools(userId);
-      return NextResponse.json(groupMCPTools(tools));
+      return NextResponse.json<Result<MCPToolsData>>({
+        data: groupMCPTools(tools),
+        message: HttpMessage.REQUEST_SUCCESS,
+        code: HttpCode.SUCCESS,
+      });
     });
   } catch (error) {
-    console.error('Error fetching MCP tools:', error);
+    console.error(error);
     return NextResponse.json(
       {
-        error: 'Failed to fetch MCP tools',
-        ...createEmptyResponse(),
+        data: null,
+        message: HttpMessage.REQUEST_FAILED,
+        code: HttpBusinessCode.FAIL,
       },
-      { status: 500 },
+      { status: HttpCode.INTERNAL_SERVER_ERROR },
     );
   }
 }

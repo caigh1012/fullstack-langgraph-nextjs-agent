@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { MessageResponse } from '@/types/messages';
+import { MessageResponse } from '@/types/vo/message.vo';
 import { Message, MessageAction, MessageActions, MessageContent, MessageToolbar } from './ai-elements/message';
 import { Avatar, AvatarImage } from './ui/avatar';
 import { Shimmer } from './ai-elements/shimmer';
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 interface AiMessageProps {
   message: MessageResponse;
   isStreaming?: boolean;
+  sendLoading?: boolean;
 }
 
 const staticActionClassName =

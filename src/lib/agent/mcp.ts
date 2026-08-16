@@ -1,36 +1,21 @@
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import type { OAuthClientProvider } from '@modelcontextprotocol/sdk/client/auth.js';
 import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
 import { getMCPServerList } from '@/services/mcp/mcp.service';
+import type { HttpMCPServerConfig, MCPServersConfig, StdioMCPServerConfig } from '@/types/dto/mcp-tools.dto';
 import { OAuthStatus } from '../mcp/oauth-detection';
 import { sanitizeTool } from './util';
 
-interface StdioMCPServerConfig {
-  transport: 'stdio';
-  command: string;
-  args?: string[];
-  env?: Record<string, string>;
-}
-
-interface HttpMCPServerConfig {
-  transport: 'http';
-  url: string;
-  headers?: Record<string, string>;
-  authProvider?: OAuthClientProvider;
-}
-
-type MCPServerConfig = StdioMCPServerConfig | HttpMCPServerConfig;
-
-export async function getMCPServerConfigs(userId: string): Promise<Record<string, MCPServerConfig>> {
+export async function getMCPServerConfigs(userId: string): Promise<MCPServersConfig> {
   try {
     const servers = (await getMCPServerList(userId)).filter((server) => server.enabled);
-    const configs: Record<string, MCPServerConfig> = {};
+    const configs: MCPServersConfig = {};
 
     for (const server of servers) {
       if (server.type === 'stdio' && server.command) {
         const config: StdioMCPServerConfig = {
           transport: 'stdio',
           command: server.command,
+          args: [],
         };
 
         if (server.args && Array.isArray(server.args)) {
@@ -51,7 +36,7 @@ export async function getMCPServerConfigs(userId: string): Promise<Record<string
           config.headers = server.headers as Record<string, string>;
         }
 
-        // Add authProvider for servers that require OAuth and have connected
+        // 仅当服务器需要 OAuth 并且已连接时添加添加 authProvider
         if (server.requiresAuth && server.oauthStatus === OAuthStatus.CONNECTED) {
           config.authProvider = new ServerOAuthProvider(server.id, server.name, userId);
         }
@@ -76,10 +61,9 @@ export async function createMCPClient(userId: string): Promise<MultiServerMCPCli
     }
 
     const client = new MultiServerMCPClient({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mcpServers: mcpServers as any, // Complex MCP server config types require type assertion
-      throwOnLoadError: false, // Don't fail if some servers can't connect
-      prefixToolNameWithServerName: true, // Prevent tool name conflicts
+      mcpServers,
+      throwOnLoadError: false, // 不在加载时抛出错误
+      prefixToolNameWithServerName: true, // 防止工具名称冲突
     });
 
     return client;

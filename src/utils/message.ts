@@ -1,4 +1,4 @@
-import { AIMessageData, MessageResponse } from '@/types/messages';
+import { AIMessageData, MessageResponse } from '@/types/vo/message.vo';
 
 export function getMessageContent(message: MessageResponse): string {
   if (typeof message.data?.content === 'string') {

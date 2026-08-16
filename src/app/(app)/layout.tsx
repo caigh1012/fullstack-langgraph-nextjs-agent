@@ -9,7 +9,7 @@ import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { LeftSidebar } from '@/components/left-sidebar';
 import { OAuthToast } from '@/components/oauth-toast';
-import { FirstMessageProvider } from '@/contexts/first-message-context';
+import { FirstMessageProvider } from '@/contexts/message-context';
 import { UISettingContextProvider } from '@/contexts/ui-settings-context';
 import { Suspense } from 'react';
 

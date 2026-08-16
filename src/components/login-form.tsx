@@ -83,7 +83,9 @@ export default function LoginForm() {
       });
       router.replace('/');
       router.refresh();
-    } catch {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

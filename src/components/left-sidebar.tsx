@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Boxes, ChevronsUpDown, LogOut, MessageCircleCheck, Settings, UserRound, UserRoundCog } from 'lucide-react';
+import { ChevronsUpDown, LogOut, MessageCircleCheck, Settings, UserRound, UserRoundCog } from 'lucide-react';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
 import { ThreadList } from './thread-list';
 import {

@@ -1,4 +1,4 @@
-import { BasicMessageData, FileAttachment, MessageResponse } from '@/types/messages';
+import { BasicMessageData, MessageResponse } from '@/types/vo/message.vo';
 import { Message, MessageContent } from './ai-elements/message';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { ProcessedAttachment } from '@/lib/minio/content';
 import { getMessageContent } from '@/utils/message';
 import { cn } from '@/lib/utils';
+import { FileAttachment } from '@/types/common/message';
 
 export default function HumanMessage({ message }: { message: MessageResponse }) {
   const data = message.data as BasicMessageData;

@@ -1,3 +1,5 @@
+import { FileAttachment } from '../common/message';
+
 /**
  * 消息 dto
  */
@@ -7,12 +9,4 @@ export interface MessageDto {
   model?: string;
   provider?: string;
   attachments?: FileAttachment[];
-}
-
-export interface FileAttachment {
-  url: string;
-  key: string;
-  name: string;
-  type: string;
-  size: number;
 }

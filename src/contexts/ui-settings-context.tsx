@@ -1,6 +1,8 @@
+'use client';
+
 import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants';
 import { Model } from '@/types/entity/model.entity';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useLocalStorage } from 'react-use';
 
 const STORAGE_KEY = 'model_settings';
@@ -26,12 +28,25 @@ export const UISettingContext = createContext<UISettingContextType>({
 
 export function UISettingContextProvider({ children }: { children: React.ReactNode }) {
   const [model, setModel] = useLocalStorage<Model>(STORAGE_KEY, defaultModels);
+  // 客户端挂载完成前使用默认模型，避免服务端与客户端首次渲染不一致导致的 hydration 警告
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <UISettingContext.Provider value={{ model: model || defaultModels, setModel }}>
+    <UISettingContext.Provider value={{ model: mounted ? model || defaultModels : defaultModels, setModel }}>
       {children}
     </UISettingContext.Provider>
   );
 }
 
-export const useUISettingContext = () => useContext(UISettingContext);
+export function useUISettingContext() {
+  const context = useContext(UISettingContext);
+
+  if (!context) {
+    throw new Error('useUISettingContext must be used within a UISettingContextProvider');
+  }
+  return context;
+}

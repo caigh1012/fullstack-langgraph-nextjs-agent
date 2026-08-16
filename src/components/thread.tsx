@@ -6,8 +6,8 @@ import MessageList from './message-list';
 import { useChatMessage } from '@/hooks/use-chat-message';
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
-import { useFirstMessageContext } from '@/contexts/first-message-context';
 import { Message } from '@/types/common/message';
+import { useMessageContext } from '@/contexts/message-context';
 
 interface ThreadProps {
   threadId?: string;
@@ -15,7 +15,7 @@ interface ThreadProps {
 }
 
 export default function Thread({ threadId, onFirstMessageSent }: ThreadProps) {
-  const { firstMessage, setFirstMessage } = useFirstMessageContext();
+  const { firstMessage, setFirstMessage } = useMessageContext();
   const { messages, isLoadingHistory, isPending, isSending, sendMessage } = useChatMessage({ threadId });
 
   /**

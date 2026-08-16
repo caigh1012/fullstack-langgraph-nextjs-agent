@@ -24,9 +24,8 @@ import {
 import { CameraIcon, PaperclipIcon } from 'lucide-react';
 import { MAX_ATTACHMENTS } from '@/constants';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
-import { Message } from '@/types/common/message';
+import { FileAttachment, Message } from '@/types/common/message';
 import { toast } from 'sonner';
-import { FileAttachment } from '@/types/dto/message.dto';
 
 interface MessageInputProps {
   sendMessage: (message: Message) => Promise<void>;
@@ -71,10 +70,6 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
           const formData = new FormData();
           formData.append('file', new File([blob], fileName, { type: mediaType }));
           const res = await fetch('/api/agent/upload', { method: 'POST', body: formData });
-          if (!res.ok) {
-            uploadedRef.current.delete(fileId);
-            throw new Error('附件上传失败');
-          }
           const json = (await res.json()) as { data?: { url?: string; key?: string } };
           const url = json?.data?.url;
           const key = json?.data?.key;
@@ -83,10 +78,9 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
           } else {
             uploadedRef.current.delete(fileId);
           }
-        } catch (error) {
+        } catch {
           attachments.remove(fileId);
           toast.error(`附件 ${fileName} 上传失败，已从列表中移除`);
-          console.warn(error);
           uploadedRef.current.delete(fileId);
         }
       })();
@@ -99,7 +93,7 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
     <PromptInput
       globalDrop
       multiple
-      onSubmit={(message) =>
+      onSubmit={(message) => {
         sendMessage({
           content: message.text,
           model: model.model,
@@ -114,8 +108,8 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
               size: meta?.size ?? 0,
             };
           }),
-        })
-      }>
+        });
+      }}>
       <PromptInputBody>
         {attachments.files.length > 0 && (
           <PromptInputHeader>

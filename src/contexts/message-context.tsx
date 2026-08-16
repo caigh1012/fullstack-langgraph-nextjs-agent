@@ -1,12 +1,12 @@
 import { Message } from '@/types/common/message';
 import React, { createContext, useContext, useState } from 'react';
 
-export interface FirstMessageContextType {
+export interface MessageContextType {
   firstMessage: Message | null;
   setFirstMessage: (message: Message | null) => void;
 }
 
-const FirstMessageContext = createContext<FirstMessageContextType | null>(null);
+const FirstMessageContext = createContext<MessageContextType | null>(null);
 
 export function FirstMessageProvider({ children }: { children: React.ReactNode }) {
   const [firstMessage, setFirstMessage] = useState<Message | null>(null);
@@ -16,10 +16,10 @@ export function FirstMessageProvider({ children }: { children: React.ReactNode }
   );
 }
 
-export function useFirstMessageContext() {
+export function useMessageContext() {
   const context = useContext(FirstMessageContext);
   if (!context) {
-    throw new Error('useFirstMessageContext must be used within a FirstMessageProvider');
+    throw new Error('useMessageContext must be used within a MessageProvider');
   }
   return context;
 }

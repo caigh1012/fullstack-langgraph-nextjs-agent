@@ -1,3 +1,5 @@
+import { FileAttachment } from '../common/message';
+
 /**
  * MessageResponse 消息响应体
  */
@@ -9,7 +11,7 @@ export interface MessageResponse {
 export interface BasicMessageData {
   id: string;
   content: string;
-  // attachments?: FileAttachment[];
+  attachments?: FileAttachment[];
 }
 
 export interface AIMessageData {

@@ -77,12 +77,6 @@ export default function UserInfoPage() {
       body: formData,
     });
 
-    if (!response.ok) {
-      let errorMessage = '上传头像失败';
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorBody.error || errorMessage;
-      throw new Error(errorMessage);
-    }
     const data = await response.json();
     if (data.code === HttpBusinessCode.FAIL) {
       throw new Error(data.message || '上传头像失败');

@@ -1,4 +1,4 @@
-import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants/models';
+import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants';
 import { AgentBuilder } from './agent-builder';
 import { postgresCheckpointer } from './memory';
 import { createChatModel } from './models';

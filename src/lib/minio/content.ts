@@ -1,6 +1,6 @@
-import { FileAttachment } from '@/types/messages';
 import { ContentBlock } from 'langchain';
 import { getFile } from './upload';
+import { FileAttachment } from '@/types/common/message';
 
 export async function downloadFileAsBase64(key: string): Promise<string> {
   const buffer = await getFile(key);

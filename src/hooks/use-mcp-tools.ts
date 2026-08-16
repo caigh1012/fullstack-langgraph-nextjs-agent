@@ -1,3 +1,4 @@
+import { MCPToolsData } from '@/types/vo/mcp-tools.vo';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -9,12 +10,12 @@ async function fetchMCPTools() {
     }
     return await response.json();
   } catch (error: unknown) {
-    toast.error((error as { message?: string })?.message || '获取 MCP tools 失败');
+    toast.error((error as { message?: string }).message || '获取 MCP tools 失败');
   }
 }
 
 export function useMCPTools() {
-  return useQuery({
+  return useQuery<MCPToolsData>({
     queryKey: ['mcp-tools'],
     queryFn: fetchMCPTools,
     staleTime: 30000, // 30 seconds

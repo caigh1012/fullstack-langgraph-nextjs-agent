@@ -66,7 +66,8 @@ export function validateFile(file: File): ValidationError | null {
   return null;
 }
 
-export function isValidTextContent(buffer: Buffer): boolean {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function isValidTextContent(_buffer: Buffer): boolean {
   // 目前接受所有内容——后续可添加验证
   return true;
 }
