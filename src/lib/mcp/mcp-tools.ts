@@ -1,14 +1,15 @@
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
+import type { ClientConfig } from '@langchain/mcp-adapters';
 import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
 import { getMCPServerList } from '@/services/mcp/mcp.service';
-import type { HttpMCPServerConfig, MCPServersConfig, StdioMCPServerConfig } from '@/types/dto/mcp-tools.dto';
-import { OAuthStatus } from '../mcp/oauth-detection';
+import type { HttpMCPServerConfig, MCPServerConfig, StdioMCPServerConfig } from '@/types/dto/mcp-tools.dto';
+import { OAuthStatus } from '@/constants/mcp-oauth-status';
 import { sanitizeTool } from './util';
 
-export async function getMCPServerConfigs(userId: string): Promise<MCPServersConfig> {
+export async function getMCPServerConfigs(userId: string): Promise<Record<string, MCPServerConfig>> {
   try {
     const servers = (await getMCPServerList(userId)).filter((server) => server.enabled);
-    const configs: MCPServersConfig = {};
+    const configs: Record<string, MCPServerConfig> = {};
 
     for (const server of servers) {
       if (server.type === 'stdio' && server.command) {
@@ -54,7 +55,7 @@ export async function getMCPServerConfigs(userId: string): Promise<MCPServersCon
 
 export async function createMCPClient(userId: string): Promise<MultiServerMCPClient | null> {
   try {
-    const mcpServers = await getMCPServerConfigs(userId);
+    const mcpServers = (await getMCPServerConfigs(userId)) as ClientConfig['mcpServers'];
 
     if (Object.keys(mcpServers).length === 0) {
       return null;
@@ -83,6 +84,8 @@ export async function getMCPTools(userId: string) {
     const tools = await client.getTools();
 
     const sanitizedTools = tools.map((tool) => sanitizeTool(tool));
+
+    console.log('Sanitized tools:', sanitizedTools);
 
     console.log(`Loaded ${sanitizedTools.length} tools from MCP servers`);
     return sanitizedTools;

@@ -6,8 +6,8 @@ import type {
   OAuthTokens,
 } from '@modelcontextprotocol/sdk/shared/auth.js';
 import prisma from '../database/prisma';
-import { OAuthStatus } from './oauth-detection';
-import { getAppUrl } from '@/utils/get-url';
+import { getAppUrl } from '@/utils/get-app-url';
+import { OAuthStatus } from '@/constants/mcp-oauth-status';
 
 export class ServerOAuthProvider implements OAuthClientProvider {
   private serverId: string;

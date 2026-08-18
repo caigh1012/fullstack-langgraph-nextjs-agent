@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { HttpBusinessCode } from '@/constants/http';
-import { OAuthStatus } from '@/lib/mcp/oauth-detection';
+import { OAuthStatus } from '@/constants/mcp-oauth-status';
 import { MCPServer } from '@/types/vo/mcp.vo';
 
 interface MCPServerListProps {

@@ -8,12 +8,18 @@ export interface MessageResponse {
   data: BasicMessageData | AIMessageData;
 }
 
+/**
+ * human 消息
+ */
 export interface BasicMessageData {
   id: string;
   content: string;
   attachments?: FileAttachment[];
 }
 
+/**
+ * AIMessageData 消息响应体 - AI 消息
+ */
 export interface AIMessageData {
   id: string;
   content: string | ContentItem[];
@@ -33,12 +39,6 @@ export interface ContentItem {
 export interface FunctionCall {
   name: string;
   args: Record<string, unknown>;
-}
-
-export interface ContentItem {
-  text?: string;
-  functionCall?: FunctionCall;
-  thoughtSignature?: string;
 }
 
 export interface ToolCallChunk {

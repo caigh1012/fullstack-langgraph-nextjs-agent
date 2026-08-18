@@ -1,7 +1,7 @@
 import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants';
 import { AgentBuilder } from './agent-builder';
 import { postgresCheckpointer } from './memory';
-import { createChatModel } from './models';
+import { createChatModel } from './create-chat-models';
 
 export interface AgentConfigOptions {
   model?: string;
@@ -28,8 +28,18 @@ async function createAgent(cfg?: AgentConfigOptions) {
   const provider = cfg?.provider || DEFAULT_MODEL_PROVIDER; // 提供商
   const model = cfg?.model || DEFAULT_MODEL_NAME; // 模型名称
 
+  /**
+   * 创建模型
+   * @param cfg 智能体配置选项
+   * @returns 模型实例
+   */
   const llm = createChatModel({ provider, model, temperature: 1 });
 
+  /**
+   * 创建智能体
+   * @param cfg 智能体配置选项
+   * @returns 智能体实例
+   */
   const agent = new AgentBuilder({
     llm,
     checkpointer: postgresCheckpointer,

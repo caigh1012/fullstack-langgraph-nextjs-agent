@@ -5,7 +5,7 @@ import { processAttachmentsForAI } from '@/lib/minio/content';
 import { createThread, findThreadById } from '@/services/thread/thread.service';
 import { Result } from '@/types/common/result';
 import { MessageDto } from '@/types/dto/message.dto';
-import { generateThreadId } from '@/utils/generate-thread-id';
+import { generateThreadId } from '@/services/utils';
 import { HumanMessage } from '@langchain/core/messages';
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -13,7 +13,6 @@ import {
   SidebarMenuItem,
 } from './ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { formatDateTime } from '@/utils/date-format';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useThreads } from '@/hooks/use-threads';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -33,6 +32,8 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Spinner } from './ui/spinner';
 import { Thread } from '@/types/vo/thread.vo';
+import dayjs from 'dayjs';
+import { DATE_TIME_FORMAT } from '@/constants';
 
 /**
  * 会话列表组件
@@ -233,7 +234,9 @@ export function ThreadList() {
                                   {thread.title || `Thread ${thread.id.slice(0, 8)}`}
                                 </div>
                                 <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
-                                  <div className="shrink-0 tabular-nums">{formatDateTime(thread.createdAt)}</div>
+                                  <div className="shrink-0 tabular-nums">
+                                    {dayjs(thread.createdAt).format(DATE_TIME_FORMAT)}
+                                  </div>
                                 </div>
                               </div>
                             </SidebarMenuButton>

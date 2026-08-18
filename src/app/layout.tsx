@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Inter } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
-import QueryProvider from '@/helper/query-provider';
+import QueryProvider from '@/contexts/query-provider';
 import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/helper/theme-provider';
+import { ThemeProvider } from '@/contexts/theme-provider';
 import './globals.css';
 
 const geistHeading = Geist({ subsets: ['latin'], variable: '--font-heading' });

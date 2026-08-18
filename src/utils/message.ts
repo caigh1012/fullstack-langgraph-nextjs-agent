@@ -1,20 +1,23 @@
 import { AIMessageData, MessageResponse } from '@/types/vo/message.vo';
 
+/**
+ * 从消息响应体中提取消息内容
+ */
 export function getMessageContent(message: MessageResponse): string {
   if (typeof message.data?.content === 'string') {
     return message.data.content;
   }
   if (Array.isArray(message.data?.content)) {
-    // Extract text from content array, excluding file content (items with file_metadata)
+    // 从内容数组中提取文本，排除文件内容（即包含 file_metadata 的条目）
     const textParts = message.data.content
       .filter((item: unknown) => {
         if (typeof item === 'object' && item !== null) {
           const obj = item as Record<string, unknown>;
-          // Skip items with file_metadata (these are file attachments, not user text)
+          // 跳过带有 file_metadata 的项目（这些是文件附件，不是用户文本）
           if ('file_metadata' in obj && obj.file_metadata) {
             return false;
           }
-          // Include text items without file_metadata
+          // 包含无文件元数据的文本项
           return 'text' in obj && typeof obj.text === 'string';
         }
         return typeof item === 'string';

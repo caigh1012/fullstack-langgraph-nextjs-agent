@@ -22,7 +22,7 @@ import {
   usePromptInputController,
 } from '@/components/ai-elements/prompt-input';
 import { CameraIcon, PaperclipIcon } from 'lucide-react';
-import { MAX_ATTACHMENTS } from '@/constants';
+import { MAX_ATTACHMENTS } from '@/constants/upload';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
 import { FileAttachment, Message } from '@/types/common/message';
 import { toast } from 'sonner';
@@ -67,8 +67,9 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
       void (async () => {
         try {
           const blob = await fetch(blobUrl).then((r) => r.blob());
+          const fileObj = new File([blob], fileName, { type: mediaType });
           const formData = new FormData();
-          formData.append('file', new File([blob], fileName, { type: mediaType }));
+          formData.append('file', fileObj);
           const res = await fetch('/api/agent/upload', { method: 'POST', body: formData });
           const json = (await res.json()) as { data?: { url?: string; key?: string } };
           const url = json?.data?.url;
@@ -91,8 +92,14 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
 
   return (
     <PromptInput
+      maxFiles={MAX_ATTACHMENTS}
       globalDrop
       multiple
+      onError={(err) => {
+        if (err.code === 'max_files') {
+          toast.error(`单条消息最多上传 ${MAX_ATTACHMENTS} 个附件`);
+        }
+      }}
       onSubmit={(message) => {
         sendMessage({
           content: message.text,

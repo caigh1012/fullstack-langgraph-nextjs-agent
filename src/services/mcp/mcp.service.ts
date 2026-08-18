@@ -1,16 +1,15 @@
 import 'server-only';
 import { Prisma } from '../../../generated/prisma/client';
 import prisma from '@/lib/database/prisma';
-import { OAuthStatus } from '@/lib/mcp/oauth-detection';
 import { CreateMCPServerBo, UpdateMCPServerBo } from '@/types/bo/mcp.bo';
-import { MCPServerType } from '@/types/vo/mcp.vo';
+import { MCPServerType, OAuthStatusType } from '@/types/vo/mcp.vo';
 
 /**
  * 获取当前用户的 MCP Server 列表
  */
 export async function getMCPServerList(userId: string) {
   return await prisma.mCPServer.findMany({
-    where: { userId },
+    where: { userId, enabled: true },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -83,7 +82,11 @@ export async function updateMCPServer(id: string, userId: string, params: Update
  * @param serverId
  * @param status
  */
-export async function updateServerOAuthStatus(serverId: string, userId: string, status: OAuthStatus): Promise<void> {
+export async function updateServerOAuthStatus(
+  serverId: string,
+  userId: string,
+  status: OAuthStatusType,
+): Promise<void> {
   await prisma.mCPServer.update({
     where: { id: serverId, userId },
     data: { oauthStatus: status },
@@ -96,7 +99,7 @@ export async function updateServerOAuthStatus(serverId: string, userId: string, 
 export async function updateMcpHttpServer(
   serverId: string,
   userId: string,
-  params: { oauthStatus?: OAuthStatus; requiresAuth?: boolean; codeVerifier?: string | null },
+  params: { oauthStatus?: OAuthStatusType; requiresAuth?: boolean; codeVerifier?: string | null },
 ) {
   await prisma.mCPServer.update({
     where: { id: serverId, userId },

@@ -3,7 +3,7 @@ import 'server-only';
 import { BaseMessage } from '@langchain/core/messages';
 import { postgresCheckpointer } from '@/lib/agent/memory';
 import prisma from '@/lib/database/prisma';
-import { generateThreadId } from '@/utils/generate-thread-id';
+import { generateThreadId } from '@/services/utils';
 
 /**
  * 获取 Threade 消息历史

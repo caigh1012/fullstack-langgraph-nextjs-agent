@@ -32,10 +32,13 @@ export const NICKNAME_LENGTH = 12;
 export const EMAIL_REGEX = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/;
 
 /**
- * 消息最大输入文件
+ * 日期时间格式
  */
-export const MAX_ATTACHMENTS = 5;
+export const DATE_TIME_FORMAT = 'YYYY/MM/DD HH:mm:ss';
 
+/**
+ * 性别选项
+ */
 export const GENDER_OPTIONS = [
   { label: '男', value: 'MALE' },
   { label: '女', value: 'FEMALE' },

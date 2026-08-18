@@ -177,7 +177,7 @@ export async function uploadLargeFile(options: UploadFileOptions): Promise<Uploa
 }
 
 /**
- *
+ * 从 MinIO 下载文件。
  */
 export async function getFile(key: string): Promise<Buffer> {
   const stream = await minioClient.getObject(CHAT_BUCKET_NAME, key);

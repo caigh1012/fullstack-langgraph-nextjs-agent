@@ -10,6 +10,7 @@ export const withAuth = async (req: NextRequest, handler: (payload: JwtPayload) 
   try {
     // token 在这里一定会存在，若不存在会被 proxy 拦截
     const token = req.cookies.get(TOKEN_COOKIE_KEY)?.value as string;
+
     const payload = verifyToken(token) as JwtPayload;
 
     // 若 payload 不存在，返回 401

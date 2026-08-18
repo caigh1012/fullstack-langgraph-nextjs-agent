@@ -7,6 +7,7 @@ import { CHAT_BUCKET_NAME } from '@/lib/minio/client';
 import { uploadFile } from '@/lib/minio/upload';
 import { Result } from '@/types/common/result';
 import { isValidTextContent, validateFile } from '@/lib/minio/validation';
+import { OCTET_STREAM_ALLOWED_EXTENSIONS } from '@/constants/upload';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
       // TODO：在生产环境中启用内容检查以提升安全性
       if (file.type === 'application/octet-stream') {
         const extension = file.name.split('.').pop()?.toLowerCase() || '';
-        if (['md', 'markdown', 'txt'].includes(extension)) {
+        if (OCTET_STREAM_ALLOWED_EXTENSIONS.includes(extension)) {
           if (!isValidTextContent(buffer)) {
             return NextResponse.json<Result<null>>(
               {

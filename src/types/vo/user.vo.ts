@@ -1,3 +1,6 @@
+/**
+ * UserInfo 用户信息
+ */
 export interface UserInfo {
   id: string;
   username: string;

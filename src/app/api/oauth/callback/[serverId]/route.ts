@@ -4,9 +4,9 @@ import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
 import { Result } from '@/types/common/result';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { getMCPHttpServer, updateMcpHttpServer } from '@/services/mcp/mcp.service';
-import { getAppUrl } from '@/utils/get-url';
+import { getAppUrl } from '@/utils/get-app-url';
 import { NextRequest, NextResponse } from 'next/server';
-import { OAuthStatus } from '@/lib/mcp/oauth-detection';
+import { OAuthStatus } from '@/constants/mcp-oauth-status';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

@@ -1,16 +1,3 @@
-/**
- * OAuth status constants for MCP servers
- */
-export const OAuthStatus = {
-  UNKNOWN: 'UNKNOWN',
-  NOT_REQUIRED: 'NOT_REQUIRED',
-  REQUIRED: 'REQUIRED',
-  CONNECTED: 'CONNECTED',
-  EXPIRED: 'EXPIRED',
-} as const;
-
-export type OAuthStatus = (typeof OAuthStatus)[keyof typeof OAuthStatus];
-
 export interface OAuthDetectionResult {
   requiresAuth: boolean;
   resourceMetadataUrl?: string;

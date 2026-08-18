@@ -18,7 +18,7 @@ export class AgentBuilder {
 
   private async callModel(state: typeof MessagesAnnotation.State) {
     if (!this.model) {
-      throw new Error('Invalid or missing language model (llm)');
+      throw new Error('Language model (llm) is required');
     }
     const response = await this.model.invoke(state.messages);
 
