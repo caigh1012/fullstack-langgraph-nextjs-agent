@@ -85,9 +85,9 @@ export async function getMCPTools(userId: string) {
 
     const sanitizedTools = tools.map((tool) => sanitizeTool(tool));
 
-    console.log('Sanitized tools:', sanitizedTools);
+    // console.log('Sanitized tools:', sanitizedTools);
 
-    console.log(`Loaded ${sanitizedTools.length} tools from MCP servers`);
+    // console.log(`Loaded ${sanitizedTools.length} tools from MCP servers`);
     return sanitizedTools;
   } catch (error) {
     console.error('Failed to get MCP tools:', error);

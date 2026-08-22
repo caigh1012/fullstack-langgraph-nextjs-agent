@@ -1,12 +1,12 @@
 'use client';
-import Thread from '@/components/thread';
+import ThreadComponent from '@/components/thread';
 import { useParams } from 'next/navigation';
 
 export default function ThreadPage() {
   const params = useParams();
   const threadId = params.threadId as string;
   return (
-    <Thread
+    <ThreadComponent
       key={threadId}
       threadId={threadId}
     />
