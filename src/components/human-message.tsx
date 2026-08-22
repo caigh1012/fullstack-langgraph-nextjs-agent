@@ -1,9 +1,8 @@
 import { MessageResponse } from '@/types/vo/message.vo';
 import { Message, MessageContent } from './ai-elements/message';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import UserAvatar from './user-avatar';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
 import { Attachment, AttachmentInfo, AttachmentPreview, Attachments } from './ai-elements/attachments';
-import { UserRound } from 'lucide-react';
 import Image from 'next/image';
 import { ProcessedAttachment } from '@/lib/minio/content';
 import { getMessageContent } from '@/utils/message';
@@ -89,17 +88,11 @@ export default function HumanMessage({ message }: { message: MessageResponse }) 
           {/* 消息内容 */}
           {messageContent ? <div> {messageContent}</div> : null}
         </MessageContent>
-        <Avatar className="shrink-0">
-          {avatarUrl && (
-            <AvatarImage
-              src={avatarUrl}
-              alt={avatarAlt}
-            />
-          )}
-          <AvatarFallback>
-            <UserRound />
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar
+          avatarUrl={avatarUrl}
+          avatarAlt={avatarAlt}
+          className="shrink-0"
+        />
       </div>
     </Message>
   );

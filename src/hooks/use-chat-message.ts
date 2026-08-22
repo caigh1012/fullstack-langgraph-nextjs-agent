@@ -101,15 +101,26 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
       currentMessageRef.current = null;
       pendingAiIdRef.current = null;
     },
-    onError: () => {
+    onError: (error) => {
       toast.error('请求失败');
       currentMessageRef.current = null;
-      // 失败时也要清掉占位，避免一直转圈
+
+      const errorContent =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : error !== null && typeof error === 'object' && 'message' in error
+              ? String((error as { message: unknown }).message)
+              : '请求失败';
+
+      // 失败时也要清掉占位，避免一直转圈，并追加一条错误消息供 ErrorMessage 渲染
       const pendingId = pendingAiIdRef.current;
-      if (pendingId && threadId) {
-        queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) =>
-          old.filter((m) => !(m.type === 'ai' && m?.id === pendingId)),
-        );
+      if (threadId) {
+        queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => {
+          const filtered = pendingId ? old.filter((m) => !(m.type === 'ai' && m?.id === pendingId)) : old;
+          return [...filtered, { id: `error-${Date.now()}`, type: 'error', content: errorContent }];
+        });
         pendingAiIdRef.current = null;
       }
     },
@@ -170,7 +181,6 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
   const approveToolExecution = useCallback(
     async (toolCallId: string, action: 'allow' | 'deny') => {
       if (!threadId) return;
-
       stream.submit({
         model: model.model,
         provider: model.provider,

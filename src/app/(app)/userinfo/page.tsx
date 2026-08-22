@@ -10,7 +10,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/user-avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -228,17 +228,12 @@ export default function UserInfoPage() {
           <div className="space-y-3">
             <Label>头像</Label>
             <div className="flex flex-col items-center gap-3">
-              <Avatar className="size-24">
-                {resolvedAvatarUrl ? (
-                  <AvatarImage
-                    src={resolvedAvatarUrl}
-                    alt="avatar"
-                  />
-                ) : null}
-                <AvatarFallback>
-                  <UserRound className="size-12 text-muted-foreground" />
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                avatarUrl={resolvedAvatarUrl}
+                avatarAlt="avatar"
+                className="size-24"
+                iconClassName="size-12 text-muted-foreground"
+              />
               <input
                 ref={fileInputRef}
                 accept="image/*"

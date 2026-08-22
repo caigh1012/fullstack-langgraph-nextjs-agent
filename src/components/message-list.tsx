@@ -1,5 +1,6 @@
 import HumanMessage from './human-message';
 import AiMessage from './ai-message';
+import ErrorMessage from './error-message';
 import { MessageResponse } from '@/types/vo/message.vo';
 import { ToolApprovalCallbacks } from '@/utils/message';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
@@ -48,6 +49,14 @@ export default function MessageList({ messages, isStreaming = false, approveTool
               showApprovalButtons={index === messages.length - 1 && !approveAllTools}
               approvalCallbacks={approvalCallbacks}
               messages={messages}
+            />
+          );
+        }
+        if (message.type === 'error') {
+          return (
+            <ErrorMessage
+              key={message.id}
+              message={message}
             />
           );
         }

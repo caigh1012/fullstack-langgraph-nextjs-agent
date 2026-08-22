@@ -15,7 +15,7 @@ export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
-    return await withAuth(req, async (payload) => {
+    return withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const body = await req.json();
       const {
