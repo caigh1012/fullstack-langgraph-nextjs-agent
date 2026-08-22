@@ -1,11 +1,10 @@
 'use client';
 
 import { DEFAULT_MODEL_NAME, DEFAULT_MODEL_PROVIDER } from '@/constants';
+import { STORAGE_KEY, APPROVE_ALL_TOOLS_KEY } from '@/constants/storage';
 import { Model } from '@/types/entity/model.entity';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useLocalStorage } from 'react-use';
-
-const STORAGE_KEY = 'model_settings';
 
 const defaultModels: Model = {
   id: 'deepseek-v4-pro',
@@ -19,15 +18,20 @@ const defaultModels: Model = {
 export interface UISettingContextType {
   model: Model;
   setModel: (model: Model) => void;
+  approveAllTools: boolean;
+  setApproveAllTools: (approveAllTools: boolean) => void;
 }
 
 export const UISettingContext = createContext<UISettingContextType>({
   model: defaultModels,
   setModel: () => {},
+  approveAllTools: false,
+  setApproveAllTools: () => {},
 });
 
 export function UISettingContextProvider({ children }: { children: React.ReactNode }) {
   const [model, setModel] = useLocalStorage<Model>(STORAGE_KEY, defaultModels);
+  const [approveAllTools, setApproveAllTools] = useLocalStorage<boolean>(APPROVE_ALL_TOOLS_KEY, false);
   // 客户端挂载完成前使用默认模型，避免服务端与客户端首次渲染不一致导致的 hydration 警告
   const [mounted, setMounted] = useState(false);
 
@@ -36,7 +40,13 @@ export function UISettingContextProvider({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <UISettingContext.Provider value={{ model: mounted ? model || defaultModels : defaultModels, setModel }}>
+    <UISettingContext.Provider
+      value={{
+        model: mounted ? model || defaultModels : defaultModels,
+        setModel,
+        approveAllTools: mounted ? (approveAllTools ?? false) : false,
+        setApproveAllTools,
+      }}>
       {children}
     </UISettingContext.Provider>
   );

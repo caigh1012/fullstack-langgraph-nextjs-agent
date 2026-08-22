@@ -1,4 +1,4 @@
-import { BasicMessageData, MessageResponse } from '@/types/vo/message.vo';
+import { MessageResponse } from '@/types/vo/message.vo';
 import { Message, MessageContent } from './ai-elements/message';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useUserInfoContext } from '@/contexts/userinfo-context';
@@ -11,16 +11,14 @@ import { cn } from '@/lib/utils';
 import { FileAttachment } from '@/types/common/message';
 
 export default function HumanMessage({ message }: { message: MessageResponse }) {
-  const data = message.data as BasicMessageData;
-
   const { userInfo } = useUserInfoContext();
   const avatarUrl = userInfo?.avatarUrl;
   const avatarAlt = userInfo?.nickname || userInfo?.email || 'User avatar';
 
-  const attachments = [...(data.attachments || [])];
+  const attachments = [...(message.attachments || [])];
 
-  if (message.data?.content && Array.isArray(message.data.content)) {
-    const contentAttachments = (message.data.content as ProcessedAttachment[])
+  if (message.content && Array.isArray(message.content)) {
+    const contentAttachments = (message.content as ProcessedAttachment[])
       // TODO: 待优化，需要加入其他类型的附件
       .filter(
         (item) =>

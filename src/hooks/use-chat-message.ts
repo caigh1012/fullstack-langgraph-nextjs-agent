@@ -1,17 +1,19 @@
 import { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { HttpBusinessCode } from '@/constants/http';
-import { AIMessageData, MessageResponse, ToolCall } from '@/types/vo/message.vo';
+import { MessageResponse } from '@/types/vo/message.vo';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useStream, FetchStreamTransport } from '@langchain/langgraph-sdk/react';
 import { toast } from 'sonner';
 import { Message } from '@/types/common/message';
+import { useUISettingContext } from '@/contexts/ui-settings-context';
 
 export interface UseChatMessageReturn {
   messages: MessageResponse[];
   isLoadingHistory: boolean;
   isPending: boolean;
   isSending: boolean;
+  approveToolExecution: (toolCallId: string, action: 'allow' | 'deny') => Promise<void>;
   historyError: Error | null;
   sendMessage: (message: PromptInputMessage) => Promise<void>;
   refetchMessages: () => Promise<unknown>;
@@ -22,6 +24,7 @@ interface UseChatMessageProps {
 }
 
 export function useChatMessage({ threadId }: UseChatMessageProps) {
+  const { model } = useUISettingContext();
   const currentMessageRef = useRef<MessageResponse | null>(null);
   // 用于记录乐观插入的 AI 占位消息 id，首条真实 AI 消息到达时移除
   const pendingAiIdRef = useRef<string | null>(null);
@@ -105,110 +108,54 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
       const pendingId = pendingAiIdRef.current;
       if (pendingId && threadId) {
         queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) =>
-          old.filter((m) => !(m.type === 'ai' && m.data?.id === pendingId)),
+          old.filter((m) => !(m.type === 'ai' && m?.id === pendingId)),
         );
         pendingAiIdRef.current = null;
       }
     },
   });
 
-  const processAIMessage = useCallback((message: Record<string, unknown>): MessageResponse | null => {
-    const hasToolCall =
-      Array.isArray(message.content) &&
-      message.content.some((item: unknown) => item && typeof item === 'object' && 'functionCall' in item);
-    if (hasToolCall) {
-      // 返回完整的 AIMessageData 以保留所有信息
-      return {
-        type: 'ai',
-        data: {
-          id: (message.id as string) || Date.now().toString(),
-          content: typeof message.content === 'string' ? message.content : '',
-          tool_calls: (message.tool_calls as ToolCall[]) || undefined,
-          additional_kwargs: (message.additional_kwargs as Record<string, unknown>) || undefined,
-          response_metadata: (message.response_metadata as Record<string, unknown>) || undefined,
-        },
-      };
-    } else {
-      // 处理常规文本内容——从各种内容类型中提取文本
-      let text = '';
-      if (typeof message.content === 'string') {
-        text = message.content;
-      } else if (Array.isArray(message.content)) {
-        text = message.content
-          .map((c: string | { text?: string }) => (typeof c === 'string' ? c : c?.text || ''))
-          .join('');
-      } else {
-        text = String(message.content ?? '');
-      }
-
-      // 提取推理内容（reasoning_content），即使主文本为空也需要保留
-      const additionalKwargs = (message.additional_kwargs as Record<string, unknown>) || undefined;
-      const reasoningRaw =
-        (additionalKwargs?.reasoning_content as unknown) ??
-        (additionalKwargs?.reasoning as unknown) ??
-        (additionalKwargs?.thoughts as unknown);
-      const reasoning = typeof reasoningRaw === 'string' ? reasoningRaw : '';
-
-      // content 或 reasoning 任意一个非空时，才返回消息
-      if (text.trim() || reasoning.trim()) {
-        return {
-          type: 'ai',
-          data: {
-            id: (message.id as string) || Date.now().toString(),
-            content: text,
-            ...(additionalKwargs && { additional_kwargs: additionalKwargs }),
-          },
-        };
-      }
-    }
-    return null;
-  }, []);
-
   useEffect(() => {
     if (!threadId || stream.messages.length === 0) return;
 
     const message = stream.messages[stream.messages.length - 1];
 
-    // 只处理 AI 类型的消息，Human 消息已由 sendMessage 添加到缓存
-    if (message.type !== 'ai' && (message as Record<string, unknown>).constructor?.name !== 'AIMessage') return;
+    // 只处理 AI / tool 类型的消息，Human 消息已由 sendMessage 添加到缓存
+    if (
+      message.type !== 'ai' &&
+      message.type !== 'tool' &&
+      (message as Record<string, unknown>).constructor?.name !== 'AIMessage'
+    )
+      return;
 
-    const processedMessage = processAIMessage(message);
+    // const processedMessage = processAIMessage(message);
 
-    if (!processedMessage) return;
-    const data = processedMessage.data as AIMessageData;
+    if (!message) return;
+    // const data = message;
 
     // 检查是否是新消息
-    if (!currentMessageRef.current || currentMessageRef.current?.data?.id !== processedMessage.data?.id) {
+    if (!currentMessageRef.current || currentMessageRef.current?.id !== message.id) {
       // 真实 AI 首条到达：先把乐观插入的 AI 占位从缓存中剔除，再追加真实消息
       const pendingId = pendingAiIdRef.current;
-      const realMessage = processedMessage;
-      currentMessageRef.current = realMessage;
+      const realMessage = message;
+
+      currentMessageRef.current = realMessage as MessageResponse;
+
       queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => {
-        const filtered = pendingId ? old.filter((m) => !(m.type === 'ai' && m.data?.id === pendingId)) : old;
+        // 过滤掉占位消息
+        const filtered = pendingId ? old.filter((m) => !(m.type === 'ai' && m?.id === pendingId)) : old;
         return [...filtered, realMessage];
       });
       if (pendingId) {
         pendingAiIdRef.current = null;
       }
     } else {
-      const currentData = currentMessageRef.current.data as AIMessageData;
-
       // 更新当前消息内容
-      currentMessageRef.current = {
-        ...currentMessageRef.current,
-        data: {
-          ...currentData,
-          content: data.content,
-          // 如果存在，请更新工具调用数据
-          ...(data.tool_calls && { tool_calls: data.tool_calls }),
-          ...(data.additional_kwargs && { additional_kwargs: data.additional_kwargs }),
-          ...(data.response_metadata && { response_metadata: data.response_metadata }),
-        },
-      };
+      currentMessageRef.current = message as MessageResponse;
 
       queryClient.setQueryData(['messages', threadId], (old: MessageResponse[] = []) => {
         // 查找当前消息在缓存中的索引
-        const idx = old.findIndex((m) => m?.data?.id === currentMessageRef.current!.data.id);
+        const idx = old.findIndex((m) => m?.id === currentMessageRef.current!.id);
         // 如果消息不存在，直接返回旧缓存
         if (idx === -1) return old;
         // 更新缓存中的消息内容
@@ -218,7 +165,22 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
         return clone;
       });
     }
-  }, [stream.messages, threadId, processAIMessage]);
+  }, [stream.messages, threadId]);
+
+  const approveToolExecution = useCallback(
+    async (toolCallId: string, action: 'allow' | 'deny') => {
+      if (!threadId) return;
+
+      stream.submit({
+        model: model.model,
+        provider: model.provider,
+        threadId,
+        content: '',
+        allowTool: action,
+      });
+    },
+    [threadId, stream],
+  );
 
   /**
    * 发送消息
@@ -230,22 +192,18 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
       const tempId = `temp-${Date.now()}`;
       const aiTempId = `pending-ai-${Date.now()}`;
       const userMessage: MessageResponse = {
+        id: tempId,
         type: 'human',
-        data: {
-          id: tempId,
-          content: message.content,
-          ...(message.attachments && { attachments: message.attachments }),
-        },
+        content: message.content,
+        ...(message.attachments && { attachments: message.attachments }),
       };
 
       // 乐观插入一条 AI 占位消息：让 AiMessage 立即渲染 “正在思考” UI，
       // 直到 stream.messages 出现真实 AI 消息再被替换
       const aiPlaceholder: MessageResponse = {
         type: 'ai',
-        data: {
-          id: aiTempId,
-          content: '',
-        },
+        id: aiTempId,
+        content: '',
       };
 
       pendingAiIdRef.current = aiTempId;
@@ -260,6 +218,8 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
         content: message.content,
         ...(message.model && { model: message.model }),
         ...(message.provider && { provider: message.provider }),
+        ...(message.allowTool !== undefined && { allowTool: message.allowTool }),
+        ...(message.approveAllTools !== undefined && { approveAllTools: message.approveAllTools }),
         ...(message.attachments && { attachments: message.attachments }),
       });
     },
@@ -272,6 +232,7 @@ export function useChatMessage({ threadId }: UseChatMessageProps) {
     isPending: isPendingHistory,
     isSending: stream.isLoading,
     historyError,
+    approveToolExecution,
     sendMessage,
     refetchMessages: refetchMessagesQuery,
   };

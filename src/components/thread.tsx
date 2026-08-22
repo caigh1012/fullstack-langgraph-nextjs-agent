@@ -16,7 +16,9 @@ interface ThreadProps {
 
 export default function ThreadComponent({ threadId, onFirstMessageSent }: ThreadProps) {
   const { firstMessage, setFirstMessage } = useMessageContext();
-  const { messages, isLoadingHistory, isPending, isSending, sendMessage } = useChatMessage({ threadId });
+  const { messages, isLoadingHistory, isPending, isSending, approveToolExecution, sendMessage } = useChatMessage({
+    threadId,
+  });
 
   /**
    * 处理输入的消息，如果是第一个消息，先进行存储调用 onFirstMessageSent 回调函数
@@ -68,6 +70,7 @@ export default function ThreadComponent({ threadId, onFirstMessageSent }: Thread
               <MessageList
                 messages={messages}
                 isStreaming={isSending}
+                approveToolExecution={approveToolExecution}
               />
             </ConversationContent>
           </Conversation>

@@ -6,20 +6,23 @@ import { Message, MessageAction, MessageActions, MessageContent, MessageToolbar 
 import { Avatar, AvatarImage } from './ui/avatar';
 import { Shimmer } from './ai-elements/shimmer';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from './ai-elements/reasoning';
+import ToolMessage from './tool-message';
 
-import { getMessageContent, getMessageReasoning } from '@/utils/message';
+import { getMessageContent, getMessageReasoning, ToolApprovalCallbacks } from '@/utils/message';
 import { ArrowUpRight, Check, Copy, RefreshCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import rehypeKatex from 'rehype-katex';
 import MDEditor from '@uiw/react-md-editor';
 import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useCopyToClipboard } from 'react-use';
+import { useCallback, useEffect, useState } from 'react';
+import { useCopyToClipboard, useTimeoutFn } from 'react-use';
 import { toast } from 'sonner';
 
 interface AiMessageProps {
   message: MessageResponse;
   isStreaming?: boolean;
-  sendLoading?: boolean;
+  approvalCallbacks?: ToolApprovalCallbacks;
+  showApprovalButtons?: boolean;
+  messages?: MessageResponse[];
 }
 
 const staticActionClassName =
@@ -35,63 +38,49 @@ function getReasoningMessage(isStreaming: boolean, duration?: number): ReactNode
   return <p>已思考 (用时 {duration} 秒)</p>;
 }
 
-export default function AiMessage({ message, isStreaming = false }: AiMessageProps) {
+export default function AiMessage({
+  message,
+  isStreaming = false,
+  approvalCallbacks,
+  showApprovalButtons,
+  messages,
+}: AiMessageProps) {
   const { resolvedTheme } = useTheme();
   const messageContent = getMessageContent(message);
   const reasoning = getMessageReasoning(message);
   const [copied, setCopied] = useState(false);
   const [copyState, copyToClipboard] = useCopyToClipboard();
-  const copyResetTimeoutRef = useRef<number | null>(null);
-  const pendingCopyValueRef = useRef<string | null>(null);
+  const [, cancelCopiedReset, resetCopiedReset] = useTimeoutFn(() => setCopied(false), 2000);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-color-mode', resolvedTheme || 'system');
   }, [resolvedTheme]);
 
-  useEffect(
-    () => () => {
-      if (copyResetTimeoutRef.current) {
-        window.clearTimeout(copyResetTimeoutRef.current);
-      }
-    },
-    [],
-  );
+  // useTimeoutFn 会在挂载时自动启动一次，这里取消它，仅在复制成功后启动
+  useEffect(() => {
+    cancelCopiedReset();
+  }, [cancelCopiedReset]);
 
   useEffect(() => {
-    if (!pendingCopyValueRef.current) {
-      return;
-    }
-
     if (copyState.error) {
-      pendingCopyValueRef.current = null;
       toast.error('复制失败，请稍后重试');
       return;
     }
 
-    if (copyState.value !== pendingCopyValueRef.current) {
+    if (!copyState.value) {
       return;
     }
 
     setCopied(true);
     toast.success('内容复制成功');
-
-    if (copyResetTimeoutRef.current) {
-      window.clearTimeout(copyResetTimeoutRef.current);
-    }
-
-    copyResetTimeoutRef.current = window.setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-
-    pendingCopyValueRef.current = null;
-  }, [copyState.error, copyState.value]);
+    resetCopiedReset();
+  }, [copyState.error, copyState.value, resetCopiedReset]);
 
   const handleCopy = useCallback(() => {
     if (!messageContent) {
       return;
     }
 
-    pendingCopyValueRef.current = messageContent;
     copyToClipboard(messageContent);
   }, [copyToClipboard, messageContent]);
 
@@ -113,6 +102,13 @@ export default function AiMessage({ message, isStreaming = false }: AiMessagePro
               <ReasoningContent>{reasoning ?? ''}</ReasoningContent>
             </Reasoning>
           )}
+          {/* 工具调用 */}
+          <ToolMessage
+            message={message}
+            messages={messages}
+            showApprovalButtons={showApprovalButtons}
+            approvalCallbacks={approvalCallbacks}
+          />
           {messageContent && (
             <>
               <MDEditor.Markdown
@@ -125,6 +121,7 @@ export default function AiMessage({ message, isStreaming = false }: AiMessagePro
                 }}
                 rehypePlugins={[rehypeKatex]}
               />
+
               <MessageToolbar className="mt-2">
                 <MessageActions>
                   <MessageAction

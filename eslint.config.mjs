@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     'build/**',
     'node_modules/**',
     'dist/**',
+    'src/components/ai-elements/**',
+    'src/components/ui/**',
     'next-env.d.ts',
   ]),
   {

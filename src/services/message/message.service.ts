@@ -22,7 +22,12 @@ export async function fetchThreadHistory(userId: string, threadId: string) {
     ? history.channel_values.messages
     : [];
 
-  return messages.map((msg) => ({
-    ...msg.toDict(),
-  }));
+  return messages.map((msg) => {
+    const message = msg.toDict();
+    return {
+      type: message.type,
+      id: message.data?.id,
+      ...(message.data || {}),
+    };
+  });
 }

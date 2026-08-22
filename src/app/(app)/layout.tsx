@@ -20,12 +20,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { resolvedTheme, setTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
-  // useEffect(() => {
-  //   fetch('/api/mcp-tools')
-  //     .then((res) => res.json())
-  //     .then((data) => console.log(data, '<___data'));
-  // }, []);
-
   return (
     <UserInfoProvider>
       <UISettingContextProvider>

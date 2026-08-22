@@ -8,6 +8,7 @@ import { MessageDto } from '@/types/dto/message.dto';
 import { generateThreadId } from '@/services/utils';
 import { HumanMessage } from '@langchain/core/messages';
 import { NextRequest, NextResponse } from 'next/server';
+import { Command } from '@langchain/langgraph';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -17,7 +18,15 @@ export async function POST(req: NextRequest) {
     return await withAuth(req, async (payload) => {
       const userId = payload.sub as string;
       const body = await req.json();
-      const { threadId, content: userContent, model, provider, attachments } = body as MessageDto;
+      const {
+        threadId,
+        content: userContent,
+        model,
+        provider,
+        attachments,
+        allowTool,
+        approveAllTools,
+      } = body as MessageDto;
 
       if (!threadId) throw new Error('threadId is required');
 
@@ -25,6 +34,32 @@ export async function POST(req: NextRequest) {
       if (!existingThread) {
         const defaultTitle = userContent?.trim().slice(0, 50) || '新对话';
         await createThread(threadId, defaultTitle, userId);
+      }
+
+      if (allowTool) {
+        const agent = await ensureAgent({ userId, model, provider, approveAllTools });
+
+        type StreamInput = Parameters<typeof agent.stream>[0];
+        const inputs: StreamInput = new Command({
+          resume: {
+            action: allowTool === 'allow' ? 'continue' : 'update',
+            data: '',
+          },
+        });
+
+        const stream = await agent.stream(inputs, {
+          encoding: 'text/event-stream',
+          streamMode: ['updates', 'messages'],
+          configurable: { thread_id: generateThreadId(userId, threadId) },
+        });
+
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            Connection: 'keep-alive',
+          },
+        });
       }
 
       let messageContent: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
@@ -42,7 +77,7 @@ export async function POST(req: NextRequest) {
         messages: [new HumanMessage({ content: messageContent })],
       };
 
-      const agent = await ensureAgent({ model, provider });
+      const agent = await ensureAgent({ userId, model, provider, approveAllTools });
 
       const stream = await agent.stream(inputs, {
         encoding: 'text/event-stream',

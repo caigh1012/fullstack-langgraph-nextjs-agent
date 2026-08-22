@@ -1,15 +1,16 @@
-import { AIMessageData, MessageResponse } from '@/types/vo/message.vo';
-
+import { MessageResponse, ToolCall } from '@/types/vo/message.vo';
 /**
  * 从消息响应体中提取消息内容
  */
 export function getMessageContent(message: MessageResponse): string {
-  if (typeof message.data?.content === 'string') {
-    return message.data.content;
+  // 如果 content 是字符串，直接返回
+  if (typeof message.content === 'string') {
+    return message.content;
   }
-  if (Array.isArray(message.data?.content)) {
+  // 如果 content 是数组，提取文本
+  if (Array.isArray(message.content)) {
     // 从内容数组中提取文本，排除文件内容（即包含 file_metadata 的条目）
-    const textParts = message.data.content
+    const textParts = message.content
       .filter((item: unknown) => {
         if (typeof item === 'object' && item !== null) {
           const obj = item as Record<string, unknown>;
@@ -42,9 +43,45 @@ export function getMessageContent(message: MessageResponse): string {
  * 兼容 reasoning_content / reasoning / thoughts 等常见字段
  */
 export function getMessageReasoning(message: MessageResponse): string {
-  const data = message.data as AIMessageData | undefined;
-  const additional = data?.additional_kwargs;
+  const additional = message?.additional_kwargs;
   if (!additional || typeof additional !== 'object') return '';
   const candidate = additional.reasoning_content ?? additional.reasoning ?? additional.thoughts;
   return typeof candidate === 'string' ? candidate : '';
+}
+
+export interface ToolApprovalCallbacks {
+  onApprove: (toolCallId: string) => void;
+  onDeny: (toolCallId: string) => void;
+}
+
+/**
+ * 提取 AI 消息中的工具调用列表
+ */
+export function getToolCalls(message: MessageResponse): ToolCall[] {
+  if (message.type !== 'ai' || !Array.isArray(message.tool_calls)) {
+    return [];
+  }
+  return message.tool_calls;
+}
+
+/**
+ * 判断消息是否包含尚未执行的工具调用
+ */
+export function hasPendingToolCalls(message: MessageResponse): boolean {
+  return getToolCalls(message).length > 0;
+}
+
+/**
+ * 从消息列表中匹配工具调用的执行结果
+ */
+export function getToolResult(toolCallId: string, messages: MessageResponse[]): { content: string } | null {
+  for (const msg of messages) {
+    if (msg.type !== 'tool') continue;
+    const toolMessage = msg as MessageResponse & { tool_call_id?: string };
+    if (toolMessage.tool_call_id === toolCallId) {
+      const content = typeof msg.content === 'string' ? msg.content : '';
+      return { content };
+    }
+  }
+  return null;
 }

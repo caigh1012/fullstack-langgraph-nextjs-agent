@@ -5,6 +5,9 @@ import { useSetState } from 'react-use';
 
 import { ModelSelect } from '@/components/model-select';
 import { Attachment, AttachmentPreview, AttachmentRemove, Attachments } from '@/components/ai-elements/attachments';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -21,7 +24,7 @@ import {
   PromptInputTools,
   usePromptInputController,
 } from '@/components/ai-elements/prompt-input';
-import { CameraIcon, PaperclipIcon } from 'lucide-react';
+import { CameraIcon, CheckIcon, HandIcon, PaperclipIcon, SparklesIcon, Workflow } from 'lucide-react';
 import { MAX_ATTACHMENTS } from '@/constants/upload';
 import { useUISettingContext } from '@/contexts/ui-settings-context';
 import { FileAttachment, Message } from '@/types/common/message';
@@ -32,8 +35,18 @@ interface MessageInputProps {
   isSending: boolean;
 }
 
+const APPROVE_MODES: ReadonlyArray<{
+  value: boolean;
+  label: string;
+  description: string;
+  icon: typeof HandIcon;
+}> = [
+  { value: false, label: '手动审批', description: '每个重要操作都需要你的批准', icon: HandIcon },
+  { value: true, label: '自动审批', description: '让 AI 审核并批准重要操作', icon: SparklesIcon },
+];
+
 function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
-  const { model, setModel } = useUISettingContext();
+  const { model, setModel, approveAllTools, setApproveAllTools } = useUISettingContext();
   const { textInput, attachments } = usePromptInputController();
 
   // 远端回显文件元信息：attachment.id -> MinIO { url, key, size }
@@ -105,6 +118,7 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
           content: message.text,
           model: model.model,
           provider: model.provider,
+          approveAllTools,
           attachments: attachments.files.map<FileAttachment>((file) => {
             const meta = remoteMeta[file.id];
             return {
@@ -146,6 +160,53 @@ function MessageInputInner({ sendMessage, isSending }: MessageInputProps) {
             model={model}
             onModelChange={setModel}
           />
+          <Tooltip>
+            <Popover>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant="outline">
+                    <Workflow className="size-4" />
+                  </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                {APPROVE_MODES.find((m) => m.value === approveAllTools)?.label}
+              </TooltipContent>
+              <PopoverContent
+                align="start"
+                className="w-80 gap-0 p-0"
+                side="top">
+                <div
+                  className="flex flex-col p-1"
+                  role="radiogroup">
+                  {APPROVE_MODES.map((mode) => {
+                    const Icon = mode.icon;
+                    const isSelected = approveAllTools === mode.value;
+                    return (
+                      <button
+                        className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-2.5 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none"
+                        key={String(mode.value)}
+                        onClick={() => setApproveAllTools(mode.value)}
+                        type="button">
+                        <Icon className="size-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <div className="text-sm leading-tight font-medium">{mode.label}</div>
+                          <div className="text-xs leading-snug text-muted-foreground">{mode.description}</div>
+                        </div>
+                        {isSelected ? (
+                          <CheckIcon className="size-4 shrink-0 text-primary" />
+                        ) : (
+                          <span className="size-4 shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </Tooltip>
         </PromptInputTools>
         <div className="flex items-center gap-1">
           {model?.isMultiModal && (

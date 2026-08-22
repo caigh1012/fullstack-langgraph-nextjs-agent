@@ -4,8 +4,16 @@ import { FileAttachment } from '../common/message';
  * MessageResponse 消息响应体
  */
 export interface MessageResponse {
+  id: string;
   type: 'human' | 'ai' | 'tool' | 'error' | 'system';
-  data: BasicMessageData | AIMessageData;
+  attachments?: FileAttachment[];
+  // data: BasicMessageData | AIMessageData;
+  content: string | ContentItem[];
+  tool_calls?: ToolCall[];
+  tool_call_chunks?: ToolCallChunk[];
+  additional_kwargs?: Record<string, unknown>;
+  invalid_tool_calls?: unknown[];
+  response_metadata?: Record<string, unknown>;
 }
 
 /**

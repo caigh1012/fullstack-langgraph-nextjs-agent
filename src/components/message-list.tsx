@@ -1,36 +1,40 @@
 import HumanMessage from './human-message';
 import AiMessage from './ai-message';
 import { MessageResponse } from '@/types/vo/message.vo';
+import { ToolApprovalCallbacks } from '@/utils/message';
+import { useUISettingContext } from '@/contexts/ui-settings-context';
 
 interface MessageListProps {
   messages: MessageResponse[];
   isStreaming?: boolean;
+  approveToolExecution?: (toolCallId: string, action: 'allow' | 'deny') => Promise<void>;
 }
 
-export default function MessageList({ messages, isStreaming = false }: MessageListProps) {
-  const uniqueMessages = messages.reduce((acc: MessageResponse[], message) => {
-    const isDuplicate = acc.some((m) => m.data?.id === message.data?.id);
-    if (!isDuplicate) {
-      acc.push(message);
-    }
-    return acc;
-  }, []);
+export default function MessageList({ messages, isStreaming = false, approveToolExecution }: MessageListProps) {
+  const { approveAllTools } = useUISettingContext();
+
+  const approvalCallbacks: ToolApprovalCallbacks | undefined = approveToolExecution
+    ? {
+        onApprove: (toolCallId: string) => approveToolExecution(toolCallId, 'allow'),
+        onDeny: (toolCallId: string) => approveToolExecution(toolCallId, 'deny'),
+      }
+    : undefined;
 
   // 仅最后一条 AI 消息可能是正在流式输出的消息
   const lastAiMessageId = (() => {
-    for (let i = uniqueMessages.length - 1; i >= 0; i--) {
-      if (uniqueMessages[i].type === 'ai') return uniqueMessages[i].data?.id;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].type === 'ai') return messages[i].id;
     }
     return undefined;
   })();
 
   return (
     <>
-      {uniqueMessages.map((message: MessageResponse) => {
+      {messages.map((message: MessageResponse, index) => {
         if (message.type === 'human') {
           return (
             <HumanMessage
-              key={message.data?.id}
+              key={message.id}
               message={message}
             />
           );
@@ -38,9 +42,12 @@ export default function MessageList({ messages, isStreaming = false }: MessageLi
         if (message.type === 'ai') {
           return (
             <AiMessage
-              key={message.data?.id}
+              key={message.id}
               message={message}
-              isStreaming={isStreaming && message.data?.id === lastAiMessageId}
+              isStreaming={isStreaming && message.id === lastAiMessageId}
+              showApprovalButtons={index === messages.length - 1 && !approveAllTools}
+              approvalCallbacks={approvalCallbacks}
+              messages={messages}
             />
           );
         }

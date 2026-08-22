@@ -8,5 +8,7 @@ export interface MessageDto {
   content: string;
   model?: string;
   provider?: string;
+  allowTool?: 'allow' | 'deny';
+  approveAllTools?: boolean;
   attachments?: FileAttachment[];
 }

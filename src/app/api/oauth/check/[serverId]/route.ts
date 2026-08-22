@@ -1,7 +1,7 @@
 import { OAuthStatusType } from '@/components/oauth-status-badge';
 import { HttpBusinessCode, HttpCode, HttpMessage } from '@/constants/http';
 import { withAuth } from '@/lib/auth/with-auth';
-import { detectOAuthRequirement, isTokenExpired, OAuthStatus } from '@/lib/mcp/oauth-detection';
+import { detectOAuthRequirement, isTokenExpired } from '@/lib/mcp/oauth-detection';
 import { ServerOAuthProvider } from '@/lib/mcp/oauth-provider';
 import { Result } from '@/types/common/result';
 import { getMCPHttpServer, updateServerOAuthStatus } from '@/services/mcp/mcp.service';
@@ -12,6 +12,7 @@ import {
   startAuthorization,
 } from '@modelcontextprotocol/sdk/client/auth';
 import { NextRequest, NextResponse } from 'next/server';
+import { OAuthStatus } from '@/constants/mcp-oauth-status';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
